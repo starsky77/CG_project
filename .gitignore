@@ -1,0 +1,5 @@
+.vs/*
+Debug/*
+!*.cpp
+x64/*
+packages/*
