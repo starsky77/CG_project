@@ -12,6 +12,24 @@
 
 
 
-关于整个工程的现状：
+## 关于整个工程的现状：
 
 光源模块，模型模块，相机模块都是相对独立的部分，可以在类中继续扩展；
+
+
+
+
+
+## dependency
+
+glad；freeglut；glfw3；glm；这些都是openGL相关工具
+
+assimp；读模型用的
+
+stb；读文件用的，不过这个也不一定要配置，openGL教程里面有给相应的.h文件，直接用就行
+
+
+
+配环境推荐一下vcpkg，微软的一个关于C/C++的库管理开源工具，可以集成到VS上，会用之后（几乎）所有库都可以一键安装+配置，然后直接打开VS工程就能用了，删除或者更新库也都很方便，案例一下，下面是中文文档的地址，上手很快的。
+
+https://github.com/microsoft/vcpkg/blob/master/README_zh_CN.md#%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B-windows
