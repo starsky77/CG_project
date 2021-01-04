@@ -6,3 +6,7 @@ packages/*
 *.gif
 *.jpg
 *.png
+Src/*
+!Src/*.cpp
+!Src/*.h
+mods/*
