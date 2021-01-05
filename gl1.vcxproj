@@ -155,6 +155,7 @@
   <ItemGroup>
     <ClInclude Include="astroid.h" />
     <ClInclude Include="camera.h" />
+    <ClInclude Include="gl1.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="shader.h" />
