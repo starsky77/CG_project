@@ -23,7 +23,7 @@ float ShadowCalc(){
         return 1.0;
     float depth = texture(shadowMap,projCoords.xy).r;
     float currentDepth = projCoords.z;
-    float shadow = currentDepth < depth+0.001? 1.0:0.0;
+    float shadow = currentDepth < depth+0.01? 1.0:0.0;
     return shadow;
 }
 void main()
