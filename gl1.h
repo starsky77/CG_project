@@ -9,6 +9,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 void gen_preview_framebuffer();
 void renderPlane();
+void renderCube(int light=0);
 unsigned int loadTexture(char const * path)
 {
     unsigned int textureID;
