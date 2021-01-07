@@ -16,11 +16,15 @@ unsigned int depthMapFBO,depthMap;
 static const int SHADOW_WIDTH=800,SHADOW_HEIGHT=600;
 unsigned int loadCubemap(std::vector<std::string> faces);
 bool postrender=false, edge = false, skybox=false,model_draw=false;
-bool display_corner = true, Motion=false;
+bool display_corner = true, Motion=false,feedback=true,init=true;
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-
+static const char *varyings[]={
+    // "selected_alias"
+    // "alias"
+    "TexCoords","selected_alias","a","b","c"
+};
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = SCR_WIDTH / 2.0f;
@@ -38,8 +42,8 @@ int main()
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #ifdef __APPLE__
@@ -77,7 +81,11 @@ int main()
 
     // build and compile our shader zprogram
     // ------------------------------------
+    unsigned int feedback_vbo,select_xfb;
+    unsigned int select_program=Feedback_Initialize(&feedback_vbo,&select_xfb);
     Shader lightingShader("shaders/1.color.vert", "shaders/1.color.frag");
+    // Shader lightingShader("shaders/1.color_.vert", "shaders/1.color_.frag","shaders/pass_through.geom");
+    // Shader lightingShader("shaders/geom.vert","shaders/geom.frag","shaders/geom.geom",varyings);
     Shader lightCubeShader("shaders/1.light_cube.vs", "shaders/1.light_cube.fs");
     Shader simpleShader("shaders/1.color.vs","shaders/simple.fs");
     Shader screenShader("shaders/view.vs","shaders/core.fs");
@@ -186,6 +194,8 @@ int main()
         // per-frame time logic
         // --------------------
         float currentFrame = glfwGetTime();
+        // lightingShader.setFloat("time",currentFrame);
+        lightingShader.setInt("alias",101);
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
@@ -250,6 +260,44 @@ int main()
             glBindFramebuffer(GL_FRAMEBUFFER,postrender?framebuffer:0);
             model = glm::mat4(1.0f);
         }
+        if(feedback){
+            glEnable(GL_RASTERIZER_DISCARD);
+            glUseProgram(select_program);
+            glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, select_xfb);
+            if(init){
+                glBeginTransformFeedback(GL_POINTS);
+                init=false;
+            }
+            // else glResumeTransformFeedback();
+            renderCube();
+            // glEndTransformFeedback();
+            
+            #define HERE
+            #ifdef HERE
+            // lightingShader.use();
+            // renderCube();
+            const int *data=NULL;//new int[3];
+            // if(data==NULL)data=(const int*)glMapNamedBuffer(lightingShader.vbo[0],GL_READ_ONLY);
+            glDisable(GL_RASTERIZER_DISCARD);
+            if(data==NULL)data=(const int*)glMapNamedBuffer(feedback_vbo,GL_READ_ONLY);
+            if(data){
+                std::cout<<data[0]<<" "<<data[1]<<std::endl;
+                bool b=glUnmapNamedBuffer(feedback_vbo);
+                // bool b=glUnmapNamedBuffer(lightingShader.vbo[0]);
+                if(b)std::cout<<"yes";
+                data=NULL;
+            }
+            // glPauseTransformFeedback();
+            
+            glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
+            // glEndTransformFeedback();
+            feedback=false;
+        }
+        else {
+            glEndTransformFeedback();
+            feedback=true;
+            #endif
+        }
         lightingShader.use();
         lightingShader.setMat4("lightView",glm::perspective(glm::radians(89.0f),(float)SHADOW_WIDTH/SHADOW_HEIGHT,0.1f,10.0f)*lightSpaceTrans);
         view = camera.GetViewMatrix();
@@ -305,6 +353,23 @@ int main()
             lightingShader.setMat4("model",glm::translate(glm::mat4(1.0f),glm::vec3(0.0f,-1.1f,0.0f)));
             temple.Draw(lightingShader);
         }
+        #ifndef HERE
+        if(feedback){
+            // if(data==NULL)data=(const float*)glMapNamedBuffer(cornerVBO,GL_READ_ONLY);
+            const int *data=NULL;//new int[3];
+            // if(data==NULL)data=(const int*)glMapNamedBuffer(lightingShader.vbo[0],GL_READ_ONLY);
+            if(data==NULL)data=(const int*)glMapNamedBuffer(feedback_vbo,GL_READ_ONLY);
+            if(data){
+                std::cout<<data[0]<<" "<<data[1]<<std::endl;
+                bool b=glUnmapNamedBuffer(feedback_vbo);
+                // bool b=glUnmapNamedBuffer(lightingShader.vbo[0]);
+                if(b)std::cout<<"yes";
+                data=NULL;
+            }
+            glEndTransformFeedback();
+            glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
+        }
+        #endif
         if(skybox){
             glStencilMask(0x00);
             // skybox
@@ -611,6 +676,120 @@ void renderCube(int light){
     glBindVertexArray(light?lightCubeVAO:cubeVAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
-void renderScene(){
-    
+unsigned int Feedback_Initialize(unsigned int *_vbo,unsigned int *_xfb){
+    static unsigned int xfb,sort_prog,geometry,vert,vbo[2];
+    glGenTransformFeedbacks(1, &xfb);
+    glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, xfb);
+
+    sort_prog = glCreateProgram();
+
+
+    static const char *sort_vs_source =
+            "#version 410\n"
+            "\n"
+            "uniform mat4 model_matrix;\n"
+            "\n"
+            "layout (location = 0) in vec4 position;\n"
+            "layout (location = 1) in vec3 normal;\n"
+            "\n"
+            "out vec3 vs_normal;\n"
+            "\n"
+            "void main(void)\n"
+            "{\n"
+            "    vs_normal = (model_matrix * vec4(normal, 0.0)).xyz;\n"
+            "    gl_Position = model_matrix * position;\n"
+            "}\n";
+
+    static const char *sort_gs_source =
+        "#version 410\n"
+        "\n"
+        "layout (triangles) in;\n"
+        "layout (points, max_vertices = 3) out;\n"
+        "\n"
+        "uniform mat4 projection_matrix;\n"
+        "\n"
+        "in vec3 vs_normal[];\n"
+        "out int selected_alias;\n"
+        "layout (stream = 0) out vec4 rf_position;\n"
+        "layout (stream = 0) out vec3 rf_normal;\n"
+        "\n"
+        "layout (stream = 1) out vec4 lf_position;\n"
+        "layout (stream = 1) out vec3 lf_normal;\n"
+        "\n"
+        "void main(void)\n"
+        "{\n"
+        "    vec4 A = gl_in[0].gl_Position;\n"
+        "    vec4 B = gl_in[1].gl_Position;\n"
+        "    vec4 C = gl_in[2].gl_Position;\n"
+        "    vec3 AB = (B - A).xyz;\n"
+        "    vec3 AC = (C - A).xyz;\n"
+        "    vec3 face_normal = cross(AB, AC);\n"
+        "    int i;\n"
+        "    selected_alias=100;\n"
+        "    if (face_normal.x < 0.0)\n"
+        "    {\n"
+        "        for (i = 0; i < gl_in.length(); i++)\n"
+        "        {\n"
+        "            rf_position = projection_matrix * (gl_in[i].gl_Position - vec4(30.0, 0.0, 0.0, 0.0));\n"
+        "            rf_normal = vs_normal[i];\n"
+        "            EmitStreamVertex(0);\n"
+        "        }\n"
+        "        EndStreamPrimitive(0);\n"
+        "    }\n"
+        "    else\n"
+        "    {\n"
+        "        for (i = 0; i < gl_in.length(); i++)\n"
+        "        {\n"
+        "            lf_position = projection_matrix * (gl_in[i].gl_Position + vec4(30.0, 0.0, 0.0, 0.0));\n"
+        "            lf_normal = vs_normal[i];\n"
+        "            EmitStreamVertex(1);\n"
+        "        }\n"
+        "        EndStreamPrimitive(1);\n"
+        "    }\n"
+        "}\n";
+    // vglAttachShaderSource(sort_prog, GL_VERTEX_SHADER, sort_vs_source);
+    // vglAttachShaderSource(sort_prog, GL_GEOMETRY_SHADER, sort_gs_source);
+    geometry = glCreateShader(GL_GEOMETRY_SHADER);
+    vert = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(geometry, 1, &sort_gs_source, NULL);
+    glCompileShader(geometry);
+    glShaderSource(vert, 1, &sort_vs_source, NULL);
+    glCompileShader(vert);
+    glAttachShader(sort_prog,vert);
+    glAttachShader(sort_prog,geometry);
+
+    static const char * varyings[] =
+    {
+        "selected_alias"
+    };
+
+    glTransformFeedbackVaryings(sort_prog, 1, varyings, GL_INTERLEAVED_ATTRIBS);
+
+    glLinkProgram(sort_prog);
+    glUseProgram(sort_prog);
+
+    // model_matrix_pos = glGetUniformLocation(sort_prog, "model");
+    // projection_matrix_pos = glGetUniformLocation(sort_prog, "projection");
+
+    // glGenVertexArrays(2, vao);
+    glGenBuffers(2, vbo);
+
+    for (int i = 0; i < 2; i++){
+        glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, vbo[i]);
+        glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 100 * sizeof(GLfloat), NULL, GL_DYNAMIC_COPY);
+        glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, i, vbo[i]);
+
+        // glBindVertexArray(vao[i]);
+        // glBindBuffer(GL_ARRAY_BUFFER, vbo[i]);
+        // glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(vmath::vec4) + sizeof(vmath::vec3), NULL);
+        // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vmath::vec4) + sizeof(vmath::vec3), (GLvoid *)(sizeof(vmath::vec4)));
+        // glEnableVertexAttribArray(0);
+        // glEnableVertexAttribArray(1);
+    }
+    if(_xfb){
+        *_vbo=vbo[0];
+        *_xfb=xfb;
+    }
+    return sort_prog;
 }
+
