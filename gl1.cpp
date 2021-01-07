@@ -316,17 +316,19 @@ int main()
         if(feedback){
             glEndTransformFeedback();          
             const int *data=NULL;
+            int obj;
             // glDisable(GL_RASTERIZER_DISCARD);
-            if(data==NULL)data=(const int*)glMapNamedBuffer(feedback_vbo,GL_READ_ONLY);
-            if(data){
-                std::cout<<data[0]<<" "<<data[1]<<std::endl;
-                bool b=glUnmapNamedBuffer(feedback_vbo);
-                // bool b=glUnmapNamedBuffer(lightingShader.vbo[0]);
-                if(b)std::cout<<"yes";
-                data=NULL;
-            }
+            glGetNamedBufferSubData(feedback_vbo,0,sizeof(int),&obj);
+            std::cout<<obj<<std::endl;
+            // if(data==NULL)data=(const int*)glMapNamedBuffer(feedback_vbo,GL_READ_ONLY);
+            // if(data){
+            //     std::cout<<data[0]<<" "<<data[1]<<std::endl;
+            //     bool b=glUnmapNamedBuffer(feedback_vbo);
+            //     data=NULL;
+            // }
             // glPauseTransformFeedback();
             glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 5 * sizeof(int), NULL, GL_DYNAMIC_READ);
+            
             glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
         }
 
