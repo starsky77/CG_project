@@ -16,14 +16,14 @@ unsigned int depthMapFBO,depthMap;
 static const int SHADOW_WIDTH=800,SHADOW_HEIGHT=600;
 unsigned int loadCubemap(std::vector<std::string> faces);
 bool postrender=false, edge = false, skybox=false,model_draw=false;
-bool display_corner = true, Motion=false,feedback=true,init=true;
+bool display_corner = true, Motion=false,feedback=true;
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 static const char *varyings[]={
-    // "selected_alias"
+    "selected_alias"
     // "alias"
-    "TexCoords","selected_alias","a","b","c"
+    // "TexCoords","selected_alias","a","b","c"
 };
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -81,11 +81,12 @@ int main()
 
     // build and compile our shader zprogram
     // ------------------------------------
-    unsigned int feedback_vbo,select_xfb;
-    unsigned int select_program=Feedback_Initialize(&feedback_vbo,&select_xfb);
-    Shader lightingShader("shaders/1.color.vert", "shaders/1.color.frag");
+    Shader lightingShader("shaders/geom.vert","shaders/geom.frag","shaders/geom_.geom",varyings);
+    unsigned int feedback_vbo=lightingShader.vbo[0],select_xfb=lightingShader.xfb;
+    unsigned int select_program=lightingShader.ID;
+    // unsigned int select_program=Feedback_Initialize(&feedback_vbo,&select_xfb);
+    // Shader lightingShader("shaders/1.color.vert", "shaders/1.color.frag");
     // Shader lightingShader("shaders/1.color_.vert", "shaders/1.color_.frag","shaders/pass_through.geom");
-    // Shader lightingShader("shaders/geom.vert","shaders/geom.frag","shaders/geom.geom",varyings);
     Shader lightCubeShader("shaders/1.light_cube.vs", "shaders/1.light_cube.fs");
     Shader simpleShader("shaders/1.color.vs","shaders/simple.fs");
     Shader screenShader("shaders/view.vs","shaders/core.fs");
@@ -195,7 +196,6 @@ int main()
         // --------------------
         float currentFrame = glfwGetTime();
         // lightingShader.setFloat("time",currentFrame);
-        lightingShader.setInt("alias",101);
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
@@ -261,42 +261,12 @@ int main()
             model = glm::mat4(1.0f);
         }
         if(feedback){
-            glEnable(GL_RASTERIZER_DISCARD);
+            // glEnable(GL_RASTERIZER_DISCARD);
             glUseProgram(select_program);
             glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, select_xfb);
-            if(init){
-                glBeginTransformFeedback(GL_POINTS);
-                init=false;
-            }
+            glBeginTransformFeedback(GL_TRIANGLES);
             // else glResumeTransformFeedback();
-            renderCube();
-            // glEndTransformFeedback();
-            
-            #define HERE
-            #ifdef HERE
-            // lightingShader.use();
             // renderCube();
-            const int *data=NULL;//new int[3];
-            // if(data==NULL)data=(const int*)glMapNamedBuffer(lightingShader.vbo[0],GL_READ_ONLY);
-            glDisable(GL_RASTERIZER_DISCARD);
-            if(data==NULL)data=(const int*)glMapNamedBuffer(feedback_vbo,GL_READ_ONLY);
-            if(data){
-                std::cout<<data[0]<<" "<<data[1]<<std::endl;
-                bool b=glUnmapNamedBuffer(feedback_vbo);
-                // bool b=glUnmapNamedBuffer(lightingShader.vbo[0]);
-                if(b)std::cout<<"yes";
-                data=NULL;
-            }
-            // glPauseTransformFeedback();
-            
-            glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
-            // glEndTransformFeedback();
-            feedback=false;
-        }
-        else {
-            glEndTransformFeedback();
-            feedback=true;
-            #endif
         }
         lightingShader.use();
         lightingShader.setMat4("lightView",glm::perspective(glm::radians(89.0f),(float)SHADOW_WIDTH/SHADOW_HEIGHT,0.1f,10.0f)*lightSpaceTrans);
@@ -322,10 +292,11 @@ int main()
             glActiveTexture(GL_TEXTURE2);
             glBindTexture(GL_TEXTURE_2D,depthMap);
         }
+        // FIXME: should do the select pass in reverse order
+        lightingShader.setInt("alias",5);
         renderPlane();
-
-
         // render the cube
+        lightingShader.setInt("alias",3);
         renderCube();
         // glBindVertexArray(cubeVAO);
         // glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -336,6 +307,28 @@ int main()
         lightingShader.setMat4("model",model);
         glDrawArrays(GL_TRIANGLES,0,36);
         model = glm::translate(model,box2Pos);
+        if(model_draw){
+            // lightingShader.use();
+            lightingShader.setInt("alias",2);
+            lightingShader.setMat4("model",glm::translate(glm::mat4(1.0f),glm::vec3(0.0f,-1.1f,0.0f)));
+            temple.Draw(lightingShader);
+        }
+        if(feedback){
+            glEndTransformFeedback();          
+            const int *data=NULL;
+            // glDisable(GL_RASTERIZER_DISCARD);
+            if(data==NULL)data=(const int*)glMapNamedBuffer(feedback_vbo,GL_READ_ONLY);
+            if(data){
+                std::cout<<data[0]<<" "<<data[1]<<std::endl;
+                bool b=glUnmapNamedBuffer(feedback_vbo);
+                // bool b=glUnmapNamedBuffer(lightingShader.vbo[0]);
+                if(b)std::cout<<"yes";
+                data=NULL;
+            }
+            // glPauseTransformFeedback();
+            glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 5 * sizeof(int), NULL, GL_DYNAMIC_READ);
+            glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
+        }
 
         // also draw the lamp object
         lightCubeShader.use();
@@ -348,28 +341,6 @@ int main()
         renderCube(1);
         // glBindVertexArray(lightCubeVAO);
         // glDrawArrays(GL_TRIANGLES, 0, 36);
-        if(model_draw){
-            lightingShader.use();
-            lightingShader.setMat4("model",glm::translate(glm::mat4(1.0f),glm::vec3(0.0f,-1.1f,0.0f)));
-            temple.Draw(lightingShader);
-        }
-        #ifndef HERE
-        if(feedback){
-            // if(data==NULL)data=(const float*)glMapNamedBuffer(cornerVBO,GL_READ_ONLY);
-            const int *data=NULL;//new int[3];
-            // if(data==NULL)data=(const int*)glMapNamedBuffer(lightingShader.vbo[0],GL_READ_ONLY);
-            if(data==NULL)data=(const int*)glMapNamedBuffer(feedback_vbo,GL_READ_ONLY);
-            if(data){
-                std::cout<<data[0]<<" "<<data[1]<<std::endl;
-                bool b=glUnmapNamedBuffer(feedback_vbo);
-                // bool b=glUnmapNamedBuffer(lightingShader.vbo[0]);
-                if(b)std::cout<<"yes";
-                data=NULL;
-            }
-            glEndTransformFeedback();
-            glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
-        }
-        #endif
         if(skybox){
             glStencilMask(0x00);
             // skybox
@@ -776,15 +747,8 @@ unsigned int Feedback_Initialize(unsigned int *_vbo,unsigned int *_xfb){
 
     for (int i = 0; i < 2; i++){
         glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, vbo[i]);
-        glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 100 * sizeof(GLfloat), NULL, GL_DYNAMIC_COPY);
+        glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 5 * sizeof(GLfloat), NULL, GL_DYNAMIC_COPY);
         glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, i, vbo[i]);
-
-        // glBindVertexArray(vao[i]);
-        // glBindBuffer(GL_ARRAY_BUFFER, vbo[i]);
-        // glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(vmath::vec4) + sizeof(vmath::vec3), NULL);
-        // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vmath::vec4) + sizeof(vmath::vec3), (GLvoid *)(sizeof(vmath::vec4)));
-        // glEnableVertexAttribArray(0);
-        // glEnableVertexAttribArray(1);
     }
     if(_xfb){
         *_vbo=vbo[0];
