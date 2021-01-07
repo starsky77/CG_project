@@ -11,6 +11,7 @@
 #include "mesh.h"
 #include "model.h"
 #include "gl1.h"
+#include "light.h"
 
 unsigned int depthMapFBO,depthMap;
 static const int SHADOW_WIDTH=800,SHADOW_HEIGHT=600;
@@ -36,7 +37,9 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 // lighting
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 LightPositions[]={glm::vec3(1.2f, 1.0f, 2.0f)};
+// glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 &lightPos(LightPositions[0]);
 int main()
 {
     // glfw: initialize and configure
@@ -137,6 +140,7 @@ int main()
     
     // load models 
     Model temple("nanosuit/nanosuit.obj");
+    Light lights(LightPositions,1);
     // Model temple("mods/gallery/gallery.obj");
     // load textures (we now use a utility function to keep the code more organized)
     // -----------------------------------------------------------------------------
@@ -306,7 +310,6 @@ int main()
         model = glm::translate(model,box2Pos);
         lightingShader.setMat4("model",model);
         glDrawArrays(GL_TRIANGLES,0,36);
-        model = glm::translate(model,box2Pos);
         if(model_draw){
             // lightingShader.use();
             lightingShader.setInt("alias",2);
@@ -333,14 +336,16 @@ int main()
         }
 
         // also draw the lamp object
-        lightCubeShader.use();
-        lightCubeShader.setMat4("projection", projection);
-        lightCubeShader.setMat4("view", view);
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-        lightCubeShader.setMat4("model", model);
-        renderCube(1);
+        lights.Draw(camera);
+        // lightCubeShader.use();
+        // lightCubeShader.setMat4("projection", projection);
+        // lightCubeShader.setMat4("view", view);
+        // model = glm::mat4(1.0f);
+        // model = glm::translate(model, lightPos);
+        // model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        // lightCubeShader.setMat4("model", model);
+        // renderCube(1);
+        
         // glBindVertexArray(lightCubeVAO);
         // glDrawArrays(GL_TRIANGLES, 0, 36);
         if(skybox){

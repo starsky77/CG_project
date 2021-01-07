@@ -36,6 +36,9 @@
     <ClInclude Include="gl1.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="light.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gl1.cpp">
@@ -45,6 +48,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="glad.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="light.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -156,6 +156,7 @@
     <ClInclude Include="astroid.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="gl1.h" />
+    <ClInclude Include="light.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="shader.h" />
@@ -165,6 +166,7 @@
     <ClCompile Include="astroid.cpp" />
     <ClCompile Include="gl1.cpp" />
     <ClCompile Include="glad.c" />
+    <ClCompile Include="light.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
