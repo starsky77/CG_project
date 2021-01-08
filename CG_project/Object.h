@@ -14,34 +14,73 @@
 
 using namespace std;
 
-
+enum ObjType
+{
+	MeshModel,selfMake
+};
 
 typedef struct ObjTree
 {
 	string name;
 	glm::mat4 model;
-	//仅当isLeaf=true时，VAO以及VBO中的值才有意义
+	ObjType type;
 	bool isLeaf;
 	unsigned int ObjVAO;
 	unsigned int ObjVBO;
+	Model* mesh;
 	//二叉树表示多叉树
 	struct ObjTree* leftChild, * rightSibling;
 
+	void (*Drawfp)();
+
 }ObjTree;
 
-
-ObjTree* CreatLeafnode(string name, unsigned int VAO, unsigned int VBO)
+//selfMake类原子物体
+ObjTree* CreatLeafnode(string name, unsigned int VAO, unsigned int VBO, ObjType type,void (*Draw)())
 {
+	if (type != selfMake)
+	{
+		cout << "ERROR:Input doesn't follow the type!" << endl;
+		return NULL;
+	}
 	ObjTree* node = new ObjTree;
+	node->type = type;
 	node->name = name;
 	node->ObjVAO = VAO;
 	node->ObjVBO = VBO;
 	node->isLeaf = true;
+	node->mesh = NULL;
 	node->leftChild = NULL;
 	node->rightSibling = NULL;
 	//单位矩阵
 	node->model = glm::mat4(1.0f);
-	
+	//绘制函数
+	node->Drawfp = Draw;
+	return node;
+}
+
+//mesh model类原子物体
+ObjTree* CreatLeafnode(string name, Model* mesh, ObjType type, void (*Draw)())
+{
+	if (type != MeshModel)
+	{
+		cout << "ERROR:Input doesn't follow the type!" << endl;
+		return NULL;
+	}
+	ObjTree* node = new ObjTree;
+	node->name = name;
+	node->type = type;
+	node->isLeaf = true;
+	node->leftChild = NULL;
+	node->rightSibling = NULL;
+	node->mesh = mesh;
+	node->ObjVAO = 0;
+	node->ObjVBO = 0;
+	//单位矩阵
+	node->model = glm::mat4(1.0f);
+	//绘制函数
+	node->Drawfp = Draw;
+	return node;
 }
 
 
@@ -80,7 +119,8 @@ void DrawObjCollection(ObjTree* T)
 	}
 	if (T->isLeaf)
 	{
-		DrawBaseElement();
+		//绘制原子物体
+		T->Drawfp();
 	}
 	return;
 }
@@ -91,10 +131,10 @@ void UpdataModel(ObjTree* T, glm::mat4 newMat)
 	if (T->leftChild != NULL)
 	{
 		UpdataModel(T->leftChild, T->model * newMat);
-	}
-	else if (T->rightSibling != NULL)
-	{
-		UpdataModel(T->rightSibling, T->model * newMat);
+		if (T->rightSibling != NULL)
+		{
+			UpdataModel(T->rightSibling, T->model * newMat);
+		}
 	}
 	if (T->isLeaf)
 	{
@@ -104,11 +144,7 @@ void UpdataModel(ObjTree* T, glm::mat4 newMat)
 }
 
 
-//绘制基本图元
-void DrawBaseElement()
-{
 
-}
 
 
 

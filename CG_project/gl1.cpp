@@ -12,6 +12,7 @@
 #include "model.h"
 #include "gl1.h"
 #include "light.h"
+#include "Object.h"
 
 unsigned int depthMapFBO,depthMap;
 static const int SHADOW_WIDTH=800,SHADOW_HEIGHT=600;
