@@ -90,7 +90,8 @@ int main()
 
     // build and compile our shader zprogram
     // ------------------------------------
-    Shader lightingShader("shaders/geom.vert","shaders/geom.frag","shaders/geom_.geom",varyings);
+    // Shader lightingShader("shaders/geom.vert","shaders/geom.frag","shaders/geom_.geom",varyings);
+    Shader lightingShader("shaders/cursor.vert","shaders/cursor.frag","shaders/cursor.geom",varyings);
     unsigned int feedback_vbo=lightingShader.vbo[0],select_xfb=lightingShader.xfb;
     unsigned int select_program=lightingShader.ID;
     // unsigned int select_program=Feedback_Initialize(&feedback_vbo,&select_xfb);
@@ -271,6 +272,19 @@ int main()
             model = glm::mat4(1.0f);
         }
         // glm::mat4 pick=glm::pickMatrix(glm::vec2(),glm::vec2(),glViewport())
+        int viewport[4];
+        glGetIntegerv(GL_VIEWPORT,viewport);
+        // double xpos,ypos;
+        // glfwGetCursorPos(window,&xpos,&ypos);
+        // glm::mat4 pick=glm::pickMatrix(
+        //     glm::vec2(lastX,viewport[2]-lastY),
+        //     glm::vec2(1.0,1.0),
+        //     // glm::vec2((float)lastX/SCR_WIDTH*2.0f-1.0f,(float)lastY/SCR_HEIGHT*2.0f-1.0f),
+        //     // glm::vec2(5.0f/SCR_WIDTH,5.0f/SCR_HEIGHT),
+        //     glm::vec4(viewport[0],viewport[1],viewport[2],viewport[3])
+        // );
+        lightingShader.use();
+        lightingShader.setVec2("pickPosition",glm::vec2(lastX/viewport[2]*2-1.0f,(1-lastY/viewport[3])*2-1.0f));
         if(feedback){
             // glEnable(GL_RASTERIZER_DISCARD);
             glUseProgram(select_program);
@@ -280,7 +294,6 @@ int main()
             // else glResumeTransformFeedback();
             // renderCube();
         }
-        lightingShader.use();
         lightingShader.setMat4("lightView",glm::perspective(glm::radians(89.0f),(float)SHADOW_WIDTH/SHADOW_HEIGHT,0.1f,10.0f)*lightSpaceTrans);
         view = camera.GetViewMatrix();
         lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
@@ -487,13 +500,10 @@ void processInput(GLFWwindow *window)
         Motion=!Motion;
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS){
         if(cursor_hidden){
-            // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-            // lastX=SCR_WIDTH/2;
-            // lastY=SCR_HEIGHT/2;
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             firstMouse=true;
             glfwSetCursorPos(window,SCR_WIDTH/2,SCR_HEIGHT/2);
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        }
+        }  
         else glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         cursor_hidden=!cursor_hidden;
     }
@@ -509,10 +519,13 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 
 void click_callback(GLFWwindow* window,int button,int action,int mods){
-    if(button=GLFW_MOUSE_BUTTON_LEFT)
-        if(action==GLFW_PRESS)
-            feedback=true;
-        else feedback=false;
+    if(cursor_hidden)return;
+	else {
+		if (button = GLFW_MOUSE_BUTTON_LEFT)
+			if (action == GLFW_PRESS)feedback = true;
+	}
+        // else if(action==GLFW_RELEASE)
+        //     feedback=false;
     // else if(button=GLFW)
 }
 
@@ -533,7 +546,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     lastX = xpos;
     lastY = ypos;
 
-    camera.ProcessMouseMovement(xoffset, yoffset);
+    if(cursor_hidden)camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
