@@ -16,8 +16,8 @@
 unsigned int depthMapFBO,depthMap;
 static const int SHADOW_WIDTH=800,SHADOW_HEIGHT=600;
 unsigned int loadCubemap(std::vector<std::string> faces);
-bool postrender=false, edge = false, skybox=false,model_draw=false;
-bool display_corner = true, Motion=false,feedback=true;
+bool postrender=false, edge = false, skybox=false,model_draw=false,
+    display_corner = true, Motion=false,feedback=false,cursor_hidden=true;
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -37,7 +37,12 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 // lighting
-glm::vec3 LightPositions[]={glm::vec3(1.2f, 1.0f, 2.0f)};
+glm::vec3 LightPositions[]={
+    glm::vec3(1.2f, 1.0f, 2.0f),
+    glm::vec3(1.2f, 2.0f, 0.0f),
+    glm::vec3(-1.2f, 2.0f, 2.0f),
+    glm::vec3(-1.2f, 2.0f, 0.0f)   
+};
 // glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 glm::vec3 &lightPos(LightPositions[0]);
 int main()
@@ -65,6 +70,7 @@ int main()
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetMouseButtonCallback(window,click_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
     // tell GLFW to capture our mouse
@@ -90,7 +96,7 @@ int main()
     // unsigned int select_program=Feedback_Initialize(&feedback_vbo,&select_xfb);
     // Shader lightingShader("shaders/1.color.vert", "shaders/1.color.frag");
     // Shader lightingShader("shaders/1.color_.vert", "shaders/1.color_.frag","shaders/pass_through.geom");
-    Shader lightCubeShader("shaders/1.light_cube.vs", "shaders/1.light_cube.fs");
+    // Shader lightCubeShader("shaders/1.light_cube.vs", "shaders/1.light_cube.fs");
     Shader simpleShader("shaders/1.color.vs","shaders/simple.fs");
     Shader screenShader("shaders/view.vs","shaders/core.fs");
     Shader skyboxShader("shaders/skycube.vs","shaders/skycube.fs");
@@ -140,7 +146,7 @@ int main()
     
     // load models 
     Model temple("nanosuit/nanosuit.obj");
-    Light lights(LightPositions,1);
+    Light lights(LightPositions,4);
     // Model temple("mods/gallery/gallery.obj");
     // load textures (we now use a utility function to keep the code more organized)
     // -----------------------------------------------------------------------------
@@ -264,11 +270,13 @@ int main()
             glBindFramebuffer(GL_FRAMEBUFFER,postrender?framebuffer:0);
             model = glm::mat4(1.0f);
         }
+        // glm::mat4 pick=glm::pickMatrix(glm::vec2(),glm::vec2(),glViewport())
         if(feedback){
             // glEnable(GL_RASTERIZER_DISCARD);
             glUseProgram(select_program);
             glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, select_xfb);
             glBeginTransformFeedback(GL_TRIANGLES);
+
             // else glResumeTransformFeedback();
             // renderCube();
         }
@@ -477,6 +485,18 @@ void processInput(GLFWwindow *window)
         display_corner=!display_corner;
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
         Motion=!Motion;
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS){
+        if(cursor_hidden){
+            // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+            // lastX=SCR_WIDTH/2;
+            // lastY=SCR_HEIGHT/2;
+            firstMouse=true;
+            glfwSetCursorPos(window,SCR_WIDTH/2,SCR_HEIGHT/2);
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
+        else glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        cursor_hidden=!cursor_hidden;
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -488,6 +508,13 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+void click_callback(GLFWwindow* window,int button,int action,int mods){
+    if(button=GLFW_MOUSE_BUTTON_LEFT)
+        if(action==GLFW_PRESS)
+            feedback=true;
+        else feedback=false;
+    // else if(button=GLFW)
+}
 
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
@@ -763,4 +790,3 @@ unsigned int Feedback_Initialize(unsigned int *_vbo,unsigned int *_xfb){
     }
     return sort_prog;
 }
-
