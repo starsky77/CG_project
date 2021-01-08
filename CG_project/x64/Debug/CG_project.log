@@ -1,0 +1,21 @@
+﻿  gl1.cpp
+D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\CG_project\shader.h(63,40): warning C4101: “e”: 未引用的局部变量
+D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\CG_project\mesh.h(84,1): warning C4267: “参数”: 从“size_t”转换到“GLsizei”，可能丢失数据
+D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\CG_project\gl1.cpp(208,28): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\CG_project\gl1.cpp(235,25): warning C4305: “初始化”: 从“double”到“float”截断
+D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\CG_project\gl1.cpp(538,17): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\CG_project\gl1.cpp(539,17): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\CG_project\gl1.cpp(543,19): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\CG_project\gl1.cpp(544,19): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\CG_project\gl1.cpp(546,13): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\CG_project\gl1.cpp(547,13): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\CG_project\gl1.cpp(556,31): warning C4244: “参数”: 从“double”转换到“float”，可能丢失数据
+  light.cpp
+D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\CG_project\shader.h(63,40): warning C4101: “e”: 未引用的局部变量
+D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\CG_project\light.cpp(22,81): warning C4305: “参数”: 从“double”到“float”截断
+D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\CG_project\light.cpp(23,85): warning C4305: “参数”: 从“double”到“float”截断
+D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\CG_project\light.cpp(37,53): warning C4305: “参数”: 从“double”到“float”截断
+D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\CG_project\light.cpp(38,57): warning C4305: “参数”: 从“double”到“float”截断
+  object.cpp
+  正在生成代码...
+  CG_project.vcxproj -> D:\File_WZQ\Code_VS\CG_proj_using2\CG_project\x64\Debug\CG_project.exe
