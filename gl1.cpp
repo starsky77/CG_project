@@ -1,6 +1,5 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -16,6 +15,7 @@
 unsigned int depthMapFBO,depthMap;
 static const int SHADOW_WIDTH=800,SHADOW_HEIGHT=600;
 unsigned int loadCubemap(std::vector<std::string> faces);
+int objectType=0;
 bool postrender=false, edge = false, skybox=false,model_draw=false,
     display_corner = true, Motion=false,feedback=false,cursor_hidden=true;
 // settings
@@ -272,17 +272,9 @@ int main()
             model = glm::mat4(1.0f);
         }
         // glm::mat4 pick=glm::pickMatrix(glm::vec2(),glm::vec2(),glViewport())
+ 
         int viewport[4];
         glGetIntegerv(GL_VIEWPORT,viewport);
-        // double xpos,ypos;
-        // glfwGetCursorPos(window,&xpos,&ypos);
-        // glm::mat4 pick=glm::pickMatrix(
-        //     glm::vec2(lastX,viewport[2]-lastY),
-        //     glm::vec2(1.0,1.0),
-        //     // glm::vec2((float)lastX/SCR_WIDTH*2.0f-1.0f,(float)lastY/SCR_HEIGHT*2.0f-1.0f),
-        //     // glm::vec2(5.0f/SCR_WIDTH,5.0f/SCR_HEIGHT),
-        //     glm::vec4(viewport[0],viewport[1],viewport[2],viewport[3])
-        // );
         lightingShader.use();
         lightingShader.setVec2("pickPosition",glm::vec2(lastX/viewport[2]*2-1.0f,(1-lastY/viewport[3])*2-1.0f));
         if(feedback){
@@ -337,13 +329,22 @@ int main()
             lightingShader.setMat4("model",glm::translate(glm::mat4(1.0f),glm::vec3(0.0f,-1.1f,0.0f)));
             temple.Draw(lightingShader);
         }
+        if(!cursor_hidden&&objectType){
+            model=glm::mat4(glm::mat3(camera.Right,camera.Up,-camera.Front));
+            model=glm::translate(model,camera.Position*glm::mat3(model)+glm::vec3(0.0,0.0,-3.0));
+            lightingShader.setMat4("model",model);
+            renderCube();
+        }
         if(feedback){
             glEndTransformFeedback();          
             const int *data=NULL;
-            int obj;
+            int obj[50];
             // glDisable(GL_RASTERIZER_DISCARD);
-            glGetNamedBufferSubData(feedback_vbo,0,sizeof(int),&obj);
-            std::cout<<obj<<std::endl;
+            glGetNamedBufferSubData(feedback_vbo,0,50*sizeof(int),obj);
+			for (int i = 0; i < 50; i++)if (obj[i] != 0) {
+				std::cout << obj[i] << " " << i<<" ";// std::endl;
+				obj[i] = 0;
+			}
             // if(data==NULL)data=(const int*)glMapNamedBuffer(feedback_vbo,GL_READ_ONLY);
             // if(data){
             //     std::cout<<data[0]<<" "<<data[1]<<std::endl;
@@ -520,13 +521,10 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void click_callback(GLFWwindow* window,int button,int action,int mods){
     if(cursor_hidden)return;
-	else {
-		if (button = GLFW_MOUSE_BUTTON_LEFT)
-			if (action == GLFW_PRESS)feedback = true;
-	}
-        // else if(action==GLFW_RELEASE)
-        //     feedback=false;
-    // else if(button=GLFW)
+    if(glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_LEFT)==GLFW_PRESS)
+        feedback=true;
+    if(glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_LEFT)==GLFW_RELEASE)
+		feedback=false;
 }
 
 // glfw: whenever the mouse moves, this callback is called
@@ -553,7 +551,13 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 // ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    camera.ProcessMouseScroll(yoffset);
+    if(cursor_hidden)
+        camera.ProcessMouseScroll(yoffset);
+    else {
+        if(yoffset>0)
+            objectType+=yoffset;
+        else objectType=0;
+    }
 }
 unsigned int loadCubemap(std::vector<std::string> faces)
 {

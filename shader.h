@@ -109,7 +109,7 @@ public:
             glGenBuffers(2, vbo);
             for (int i = 0; i < 2; i++){
                 glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, vbo[i]);
-                glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 5 * sizeof(int), NULL, GL_DYNAMIC_READ);
+                glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 50 * sizeof(int), NULL, GL_DYNAMIC_READ);
                 glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, i, vbo[i]);
             }
         }
