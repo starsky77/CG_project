@@ -18,7 +18,9 @@ static const int SHADOW_WIDTH=800,SHADOW_HEIGHT=600;
 unsigned int loadCubemap(std::vector<std::string> faces);
 int objectType=0;
 bool postrender=false, edge = false, skybox=false,model_draw=false,
-    display_corner = true, Motion=false,feedback=false,cursor_hidden=true;
+    display_corner = true, Motion=false,feedback=false,cursor_hidden=true,
+    draw_request=false;
+ObjTree *tree=NULL;
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -342,17 +344,29 @@ int main()
         model = glm::translate(model,box2Pos);
         lightingShader.setMat4("model",model);
         glDrawArrays(GL_TRIANGLES,0,36);
-        if(model_draw){
-            // lightingShader.use();
-            lightingShader.setInt("alias",2);
-            lightingShader.setMat4("model",glm::translate(glm::mat4(1.0f),glm::vec3(0.0f,-1.1f,0.0f)));
-            temple.Draw(lightingShader);
+        if(tree){
+            DrawObjCollection(tree,lightingShader);
         }
         if(!cursor_hidden&&objectType){
             model=glm::mat4(glm::mat3(camera.Right,camera.Up,-camera.Front));
             model=glm::translate(model,camera.Position*glm::mat3(model)+glm::vec3(0.0,0.0,-3.0));
             lightingShader.setMat4("model",model);
             renderCube();
+            if(draw_request){
+                if(!tree)tree=CreatLeafnode(4,'s',model,renderCube);
+                    else {
+                        ObjTree *p=tree->rightSibling;
+                        tree->rightSibling=CreatLeafnode(4,'s',model,renderCube);
+                        tree->rightSibling->rightSibling=p;
+                    }
+                draw_request=false;
+            }
+        }
+        if(model_draw){
+            // lightingShader.use();
+            lightingShader.setInt("alias",2);
+            lightingShader.setMat4("model",glm::translate(glm::mat4(1.0f),glm::vec3(0.0f,-1.1f,0.0f)));
+            temple.Draw(lightingShader);
         }
         if(feedback){
             glEndTransformFeedback();          
@@ -525,6 +539,8 @@ void click_callback(GLFWwindow* window,int button,int action,int mods){
         feedback=true;
     if(glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_LEFT)==GLFW_RELEASE)
 		feedback=false;
+    if(glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_RIGHT)==GLFW_PRESS)
+		draw_request=true;
 }
 
 // glfw: whenever the mouse moves, this callback is called
@@ -620,6 +636,9 @@ void renderPlane(){
     }
     glBindVertexArray(planeVAO);
     glDrawArrays(GL_TRIANGLES,0,6);
+}
+inline void renderCube(){
+    renderCube(0);
 }
 void renderCube(int light){
     static float vertices[] = {
