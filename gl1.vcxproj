@@ -153,17 +153,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="astroid.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="gl1.h" />
     <ClInclude Include="light.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="model.h" />
+    <ClInclude Include="Object.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="astroid.cpp" />
     <ClCompile Include="gl1.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="light.cpp" />
