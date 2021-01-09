@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{5f7755c8-3cb9-4808-9914-4a27f22ea033}</ProjectGuid>
-    <RootNamespace>CGproject</RootNamespace>
+    <ProjectGuid>{c779411b-7926-49b5-bdb8-7861111afd37}</ProjectGuid>
+    <RootNamespace>CGProj</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -144,7 +144,6 @@
     <ClCompile Include="object.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="astroid.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="gl1.h" />
     <ClInclude Include="light.h" />

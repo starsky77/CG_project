@@ -18,21 +18,21 @@
     <ClCompile Include="gl1.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="object.cpp">
+    <ClCompile Include="light.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="light.cpp">
+    <ClCompile Include="object.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="astroid.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="camera.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="gl1.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="light.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="mesh.h">
@@ -41,13 +41,10 @@
     <ClInclude Include="model.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="shader.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Object.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="light.h">
+    <ClInclude Include="shader.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
