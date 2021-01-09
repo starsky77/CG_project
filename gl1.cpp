@@ -92,7 +92,7 @@ int main()
     // build and compile our shader zprogram
     // ------------------------------------
     // Shader lightingShader("shaders/geom.vert","shaders/geom.frag","shaders/geom_.geom",varyings);
-    Shader lightingShader("shaders/cursor.vert","shaders/cursor.frag","shaders/cursor.geom",varyings);
+    Shader lightingShader("shaders/cursor.vert","shaders/cursor.frag","shaders/cursor.geom");
     unsigned int feedback_vbo=lightingShader.vbo[0],select_xfb=lightingShader.xfb;
     unsigned int select_program=lightingShader.ID;
     // unsigned int select_program=Feedback_Initialize(&feedback_vbo,&select_xfb);
@@ -104,6 +104,24 @@ int main()
     Shader skyboxShader("shaders/skycube.vs","shaders/skycube.fs");
     Shader depthShader("shaders/1.color.vs","shaders/simple.frag");
     Shader cornerShader("shaders/view.vs","shaders/core.frag");
+    // select buffers setup
+    // ------------------------------------------------------------------
+    unsigned int tex, buf;
+    // Generate a name for the buffer object, bind it to the
+    // GL_TEXTURE_BINDING, and allocate 4K for the buffer
+    glGenBuffers(1, &buf);
+    glBindBuffer(GL_TEXTURE_BUFFER, buf);
+    glBufferData(GL_TEXTURE_BUFFER, sizeof(int), NULL, GL_DYNAMIC_READ);
+    // Generate a new name for our texture
+    glGenTextures(1, &tex);
+    // Bind it to the buffer texture target to create it
+    glBindTexture(GL_TEXTURE_BUFFER, tex);
+    // Attach the buffer object to the texture and specify format as
+    // single channel floating point
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_R32I, buf);
+    // Now bind it for read-write to one of the image units
+    glBindImageTexture(0, tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I);
+    // ------------------------------------------------------------------
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     unsigned int quadVBO, quadVAO;
@@ -338,39 +356,20 @@ int main()
         }
         if(feedback){
             glEndTransformFeedback();          
-            const int *data=NULL;
-            int obj[50];
+            int obj;
             // glDisable(GL_RASTERIZER_DISCARD);
-            glGetNamedBufferSubData(feedback_vbo,0,50*sizeof(int),obj);
-			for (int i = 0; i < 50; i++)if (obj[i] != 0) {
-				std::cout << obj[i] << " " << i<<" ";// std::endl;
-				obj[i] = 0;
-			}
-            // if(data==NULL)data=(const int*)glMapNamedBuffer(feedback_vbo,GL_READ_ONLY);
-            // if(data){
-            //     std::cout<<data[0]<<" "<<data[1]<<std::endl;
+            glGetNamedBufferSubData(buf,0,sizeof(int),&obj);
+            std::cout<<obj<<std::endl;
             //     bool b=glUnmapNamedBuffer(feedback_vbo);
-            //     data=NULL;
-            // }
             // glPauseTransformFeedback();
-            glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 5 * sizeof(int), NULL, GL_DYNAMIC_READ);
+            // glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 5 * sizeof(int), NULL, GL_DYNAMIC_READ);
+            glBufferData(GL_TEXTURE_BUFFER, sizeof(int), NULL, GL_DYNAMIC_READ);
             
             glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
         }
 
         // also draw the lamp object
         lights.Draw(camera);
-        // lightCubeShader.use();
-        // lightCubeShader.setMat4("projection", projection);
-        // lightCubeShader.setMat4("view", view);
-        // model = glm::mat4(1.0f);
-        // model = glm::translate(model, lightPos);
-        // model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-        // lightCubeShader.setMat4("model", model);
-        // renderCube(1);
-        
-        // glBindVertexArray(lightCubeVAO);
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
         if(skybox){
             glStencilMask(0x00);
             // skybox

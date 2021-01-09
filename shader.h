@@ -95,7 +95,7 @@ public:
         if(geometryPath != nullptr){
 
             glAttachShader(ID, geometry);
-            glTransformFeedbackVaryings(ID, sizeof(varyings)/sizeof(char*), varyings, GL_INTERLEAVED_ATTRIBS);
+            if(varyings!=nullptr)glTransformFeedbackVaryings(ID, sizeof(varyings)/sizeof(char*), varyings, GL_INTERLEAVED_ATTRIBS);
         }
         glLinkProgram(ID);
         checkCompileErrors(ID, "PROGRAM");

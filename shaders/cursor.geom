@@ -1,13 +1,13 @@
 #version 450 core
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 3) out;
-
+layout (binding=0,r32i) uniform iimageBuffer alias_buffer;
 in VS_OUT {
     vec2 texCoords;
     vec2 pickCoords;
 } gs_in[];
 
-out int selected_alias;
+// out int selected_alias;
 out vec2 TexCoords; 
 out float diffuse;
 uniform int alias;
@@ -17,12 +17,6 @@ void main(){
     // 1 1 1 | 1  
     // x x x | 0  
     // y y y | 0
-    // float x1=gs_in[0].pickCoords.x/gs_in[0].pickCoords.z;
-    // float x2=gs_in[1].pickCoords.x/gs_in[1].pickCoords.z;
-    // float x3=gs_in[2].pickCoords.x/gs_in[2].pickCoords.z;
-    // float y1=gs_in[0].pickCoords.y/gs_in[0].pickCoords.z;
-    // float y2=gs_in[1].pickCoords.y/gs_in[1].pickCoords.z;
-    // float y3=gs_in[2].pickCoords.y/gs_in[2].pickCoords.z;
     float x1=gs_in[0].pickCoords.x;
     float x2=gs_in[1].pickCoords.x;
     float x3=gs_in[2].pickCoords.x;
@@ -40,7 +34,8 @@ void main(){
         if(dj[i]<=0.0)break;
     }
     if(i==3){
-        selected_alias=alias;
+        // selected_alias=alias;
+        imageStore(alias_buffer,0 , ivec4(alias));
         diffuse=0.0;
     }
     else diffuse=1.0;
