@@ -9,7 +9,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 void gen_preview_framebuffer();
 void renderPlane();
-void renderCube(int light=0);
+void renderCube();
+void renderCube(int light);
 void click_callback(GLFWwindow* window,int button,int action,int mods);
 unsigned int Feedback_Initialize(unsigned int *_vbo=NULL,unsigned int *_xfb=NULL);
 unsigned int loadTexture(char const * path)

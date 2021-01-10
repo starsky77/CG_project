@@ -12,128 +12,116 @@
 #include "shader.h"
 #include "model.h"
 
-using namespace std;
 
-enum ObjType
-{
-	MeshModel,selfMake
-};
+// enum ObjType
+// {
+// 	MeshModel,selfMake
+// };
 
-typedef struct ObjTree
+struct ObjTree
 {
-	string name;
+	int alias;
 	glm::mat4 model;
-	ObjType type;
+	char type;	// 's'elfMade, 'm'esh
 	bool isLeaf;
-	unsigned int ObjVAO;
-	unsigned int ObjVBO;
 	Model* mesh;
-	//¶ş²æÊ÷±íÊ¾¶à²æÊ÷
+	//äºŒå‰æ ‘è¡¨ç¤ºå¤šå‰æ ‘
 	struct ObjTree* leftChild, * rightSibling;
 
-	void (*Drawfp)();
+	void (*Drawfp)(void);
 
-}ObjTree;
+};
 
-//selfMakeÀàÔ­×ÓÎïÌå
-ObjTree* CreatLeafnode(string name, unsigned int VAO, unsigned int VBO, ObjType type,void (*Draw)())
+//selfMakeç±»åŸå­ç‰©ä½“
+ObjTree* CreatLeafnode(int alias, char type,glm::mat4 &model,void (*Draw)())
 {
-	if (type != selfMake)
+	if (type != 's')
 	{
-		cout << "ERROR:Input doesn't follow the type!" << endl;
+		std::cout << "ERROR:Input doesn't follow the type!" << std::endl;
 		return NULL;
 	}
 	ObjTree* node = new ObjTree;
 	node->type = type;
-	node->name = name;
-	node->ObjVAO = VAO;
-	node->ObjVBO = VBO;
+	node->alias = alias;
 	node->isLeaf = true;
 	node->mesh = NULL;
 	node->leftChild = NULL;
 	node->rightSibling = NULL;
-	//µ¥Î»¾ØÕó
-	node->model = glm::mat4(1.0f);
-	//»æÖÆº¯Êı
+	//å•ä½çŸ©é˜µ
+	node->model = model;
+	//ç»˜åˆ¶å‡½æ•°
 	node->Drawfp = Draw;
 	return node;
 }
 
-//mesh modelÀàÔ­×ÓÎïÌå
-ObjTree* CreatLeafnode(string name, Model* mesh, ObjType type, void (*Draw)())
+//mesh modelç±»åŸå­ç‰©ä½“
+ObjTree* CreatLeafnode(int alias, Model* mesh, char type, void (*Draw)())
 {
-	if (type != MeshModel)
+	if (type != 'm')
 	{
-		cout << "ERROR:Input doesn't follow the type!" << endl;
+		std::cout << "ERROR:Input doesn't follow the type!" << std::endl;
 		return NULL;
 	}
 	ObjTree* node = new ObjTree;
-	node->name = name;
+	node->alias = alias;
 	node->type = type;
 	node->isLeaf = true;
 	node->leftChild = NULL;
 	node->rightSibling = NULL;
 	node->mesh = mesh;
-	node->ObjVAO = 0;
-	node->ObjVBO = 0;
-	//µ¥Î»¾ØÕó
+	//å•ä½çŸ©é˜µ
 	node->model = glm::mat4(1.0f);
-	//»æÖÆº¯Êı
+	//ç»˜åˆ¶å‡½æ•°
 	node->Drawfp = Draw;
 	return node;
 }
 
 
-ObjTree* UnionTree(string PName, ObjTree* T1, ObjTree* T2)
+ObjTree* UnionTree(int Palias, ObjTree* T1, ObjTree* T2)
 {
 	if (!T1 || !T2)
 	{
-		cout << "Empty input node!" << endl;
+		std::cout << "Empty input node!" << std::endl;
 		return NULL;
 	}
 	T1->rightSibling = T2;
 	ObjTree* ParentNode = new ObjTree;
-	ParentNode->name = PName;
+	ParentNode->alias = Palias;
 	ParentNode->isLeaf = false;
 	ParentNode->leftChild = T1;
 	ParentNode->rightSibling = NULL;
-	//ÎŞÒâÒåÈ¡Öµ
-	ParentNode->ObjVAO = 0;
-	ParentNode->ObjVBO = 0;
+	//æ— æ„ä¹‰å–å€¼
 	ParentNode->model = glm::mat4(1.0f);
 	return ParentNode;
 }
 
 
-//»æÖÆTÎª¸ùµÄËùÓĞÎïÌå¼¯ºÏ
-void DrawObjCollection(ObjTree* T)
+//ç»˜åˆ¶Tä¸ºæ ¹çš„æ‰€æœ‰ç‰©ä½“é›†åˆ
+void DrawObjCollection(ObjTree* T,Shader &shader)
 {
 
 	if (T->leftChild != NULL)
 	{
-		DrawObjCollection(T->leftChild);
+		DrawObjCollection(T->leftChild,shader);
 	}
 	else if (T->rightSibling != NULL)
 	{
-		DrawObjCollection(T->rightSibling);
+		DrawObjCollection(T->rightSibling,shader);
 	}
-	if (T->isLeaf)
-	{
-		//»æÖÆÔ­×ÓÎïÌå
-		T->Drawfp();
-	}
+	shader.setMat4("model",T->model);
+    T->Drawfp();
 	return;
 }
 
-//¸üĞÂTÖ®ÏÂËùÓĞÒ¶×Ó½ÚµãµÄmodel¾ØÕó
-void UpdataModel(ObjTree* T, glm::mat4 newMat)
+//æ›´æ–°Tä¹‹ä¸‹æ‰€æœ‰å¶å­èŠ‚ç‚¹çš„modelçŸ©é˜µ
+void UpdateModel(ObjTree* T, glm::mat4 newMat)
 {
 	if (T->leftChild != NULL)
 	{
-		UpdataModel(T->leftChild, T->model * newMat);
+		UpdateModel(T->leftChild, T->model * newMat);
 		if (T->rightSibling != NULL)
 		{
-			UpdataModel(T->rightSibling, T->model * newMat);
+			UpdateModel(T->rightSibling, T->model * newMat);
 		}
 	}
 	if (T->isLeaf)
@@ -142,9 +130,4 @@ void UpdataModel(ObjTree* T, glm::mat4 newMat)
 	}
 	return;
 }
-
-
-
-
-
 

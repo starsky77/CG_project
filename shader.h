@@ -95,7 +95,7 @@ public:
         if(geometryPath != nullptr){
 
             glAttachShader(ID, geometry);
-            glTransformFeedbackVaryings(ID, sizeof(varyings)/sizeof(char*), varyings, GL_INTERLEAVED_ATTRIBS);
+            if(varyings!=nullptr)glTransformFeedbackVaryings(ID, sizeof(varyings)/sizeof(char*), varyings, GL_INTERLEAVED_ATTRIBS);
         }
         glLinkProgram(ID);
         checkCompileErrors(ID, "PROGRAM");
@@ -109,7 +109,7 @@ public:
             glGenBuffers(2, vbo);
             for (int i = 0; i < 2; i++){
                 glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, vbo[i]);
-                glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 5 * sizeof(int), NULL, GL_DYNAMIC_READ);
+                glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 50 * sizeof(int), NULL, GL_DYNAMIC_READ);
                 glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, i, vbo[i]);
             }
         }

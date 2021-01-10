@@ -12,3 +12,6 @@ Src/*
 mods/*
 skybox/*
 nanosuit/*
+*.vcxproj
+*.vcxproj.filters
+*.sln

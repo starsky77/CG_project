@@ -1,6 +1,5 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -17,8 +16,11 @@
 unsigned int depthMapFBO,depthMap;
 static const int SHADOW_WIDTH=800,SHADOW_HEIGHT=600;
 unsigned int loadCubemap(std::vector<std::string> faces);
+int objectType=0;
 bool postrender=false, edge = false, skybox=false,model_draw=false,
-    display_corner = true, Motion=false,feedback=false,cursor_hidden=true;
+    display_corner = true, Motion=false,feedback=false,cursor_hidden=true,
+    draw_request=false;
+ObjTree *tree=NULL;
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -92,7 +94,7 @@ int main()
     // build and compile our shader zprogram
     // ------------------------------------
     // Shader lightingShader("shaders/geom.vert","shaders/geom.frag","shaders/geom_.geom",varyings);
-    Shader lightingShader("shaders/cursor.vert","shaders/cursor.frag","shaders/cursor.geom",varyings);
+    Shader lightingShader("shaders/cursor.vert","shaders/cursor.frag","shaders/cursor.geom");
     unsigned int feedback_vbo=lightingShader.vbo[0],select_xfb=lightingShader.xfb;
     unsigned int select_program=lightingShader.ID;
     // unsigned int select_program=Feedback_Initialize(&feedback_vbo,&select_xfb);
@@ -104,6 +106,24 @@ int main()
     Shader skyboxShader("shaders/skycube.vs","shaders/skycube.fs");
     Shader depthShader("shaders/1.color.vs","shaders/simple.frag");
     Shader cornerShader("shaders/view.vs","shaders/core.frag");
+    // select buffers setup
+    // ------------------------------------------------------------------
+    unsigned int tex, buf;
+    // Generate a name for the buffer object, bind it to the
+    // GL_TEXTURE_BINDING, and allocate 4K for the buffer
+    glGenBuffers(1, &buf);
+    glBindBuffer(GL_TEXTURE_BUFFER, buf);
+    glBufferData(GL_TEXTURE_BUFFER, sizeof(int), NULL, GL_DYNAMIC_READ);
+    // Generate a new name for our texture
+    glGenTextures(1, &tex);
+    // Bind it to the buffer texture target to create it
+    glBindTexture(GL_TEXTURE_BUFFER, tex);
+    // Attach the buffer object to the texture and specify format as
+    // single channel floating point
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_R32I, buf);
+    // Now bind it for read-write to one of the image units
+    glBindImageTexture(0, tex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I);
+    // ------------------------------------------------------------------
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     unsigned int quadVBO, quadVAO;
@@ -273,17 +293,9 @@ int main()
             model = glm::mat4(1.0f);
         }
         // glm::mat4 pick=glm::pickMatrix(glm::vec2(),glm::vec2(),glViewport())
+ 
         int viewport[4];
         glGetIntegerv(GL_VIEWPORT,viewport);
-        // double xpos,ypos;
-        // glfwGetCursorPos(window,&xpos,&ypos);
-        // glm::mat4 pick=glm::pickMatrix(
-        //     glm::vec2(lastX,viewport[2]-lastY),
-        //     glm::vec2(1.0,1.0),
-        //     // glm::vec2((float)lastX/SCR_WIDTH*2.0f-1.0f,(float)lastY/SCR_HEIGHT*2.0f-1.0f),
-        //     // glm::vec2(5.0f/SCR_WIDTH,5.0f/SCR_HEIGHT),
-        //     glm::vec4(viewport[0],viewport[1],viewport[2],viewport[3])
-        // );
         lightingShader.use();
         lightingShader.setVec2("pickPosition",glm::vec2(lastX/viewport[2]*2-1.0f,(1-lastY/viewport[3])*2-1.0f));
         if(feedback){
@@ -332,6 +344,24 @@ int main()
         model = glm::translate(model,box2Pos);
         lightingShader.setMat4("model",model);
         glDrawArrays(GL_TRIANGLES,0,36);
+        if(tree){
+            DrawObjCollection(tree,lightingShader);
+        }
+        if(!cursor_hidden&&objectType){
+            model=glm::mat4(glm::mat3(camera.Right,camera.Up,-camera.Front));
+            model=glm::translate(model,camera.Position*glm::mat3(model)+glm::vec3(0.0,0.0,-3.0));
+            lightingShader.setMat4("model",model);
+            renderCube();
+            if(draw_request){
+                if(!tree)tree=CreatLeafnode(4,'s',model,renderCube);
+                    else {
+                        ObjTree *p=tree->rightSibling;
+                        tree->rightSibling=CreatLeafnode(4,'s',model,renderCube);
+                        tree->rightSibling->rightSibling=p;
+                    }
+                draw_request=false;
+            }
+        }
         if(model_draw){
             // lightingShader.use();
             lightingShader.setInt("alias",2);
@@ -340,36 +370,20 @@ int main()
         }
         if(feedback){
             glEndTransformFeedback();          
-            const int *data=NULL;
             int obj;
             // glDisable(GL_RASTERIZER_DISCARD);
-            glGetNamedBufferSubData(feedback_vbo,0,sizeof(int),&obj);
+            glGetNamedBufferSubData(buf,0,sizeof(int),&obj);
             std::cout<<obj<<std::endl;
-            // if(data==NULL)data=(const int*)glMapNamedBuffer(feedback_vbo,GL_READ_ONLY);
-            // if(data){
-            //     std::cout<<data[0]<<" "<<data[1]<<std::endl;
             //     bool b=glUnmapNamedBuffer(feedback_vbo);
-            //     data=NULL;
-            // }
             // glPauseTransformFeedback();
-            glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 5 * sizeof(int), NULL, GL_DYNAMIC_READ);
+            // glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 5 * sizeof(int), NULL, GL_DYNAMIC_READ);
+            glBufferData(GL_TEXTURE_BUFFER, sizeof(int), NULL, GL_DYNAMIC_READ);
             
             glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
         }
 
         // also draw the lamp object
         lights.Draw(camera);
-        // lightCubeShader.use();
-        // lightCubeShader.setMat4("projection", projection);
-        // lightCubeShader.setMat4("view", view);
-        // model = glm::mat4(1.0f);
-        // model = glm::translate(model, lightPos);
-        // model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
-        // lightCubeShader.setMat4("model", model);
-        // renderCube(1);
-        
-        // glBindVertexArray(lightCubeVAO);
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
         if(skybox){
             glStencilMask(0x00);
             // skybox
@@ -521,13 +535,12 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void click_callback(GLFWwindow* window,int button,int action,int mods){
     if(cursor_hidden)return;
-	else {
-		if (button = GLFW_MOUSE_BUTTON_LEFT)
-			if (action == GLFW_PRESS)feedback = true;
-	}
-        // else if(action==GLFW_RELEASE)
-        //     feedback=false;
-    // else if(button=GLFW)
+    if(glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_LEFT)==GLFW_PRESS)
+        feedback=true;
+    if(glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_LEFT)==GLFW_RELEASE)
+		feedback=false;
+    if(glfwGetMouseButton(window,GLFW_MOUSE_BUTTON_RIGHT)==GLFW_PRESS)
+		draw_request=true;
 }
 
 // glfw: whenever the mouse moves, this callback is called
@@ -554,7 +567,13 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 // ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    camera.ProcessMouseScroll(yoffset);
+    if(cursor_hidden)
+        camera.ProcessMouseScroll(yoffset);
+    else {
+        if(yoffset>0)
+            objectType+=yoffset;
+        else objectType=0;
+    }
 }
 unsigned int loadCubemap(std::vector<std::string> faces)
 {
@@ -617,6 +636,9 @@ void renderPlane(){
     }
     glBindVertexArray(planeVAO);
     glDrawArrays(GL_TRIANGLES,0,6);
+}
+inline void renderCube(){
+    renderCube(0);
 }
 void renderCube(int light){
     static float vertices[] = {
