@@ -10,3 +10,5 @@ Src/*
 !Src/*.cpp
 !Src/*.h
 mods/*
+skybox/*
+nanosuit/*
