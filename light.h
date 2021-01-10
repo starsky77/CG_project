@@ -1,5 +1,6 @@
 #ifndef LIGHT_H
 #define LIGHT_H
+
 #ifdef LIGHT_CPP
 #include <iostream>
 #include <vector>

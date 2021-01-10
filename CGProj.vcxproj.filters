@@ -21,9 +21,6 @@
     <ClCompile Include="light.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="object.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h">

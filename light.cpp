@@ -39,6 +39,7 @@ void Light::SetShaderValue(Camera &camera)
     lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
     lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
     // view/projection transformations
+
     #ifdef USE_DEPRECATED_RENDER
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     glm::mat4 view = camera.GetViewMatrix();
@@ -61,18 +62,21 @@ void Light::Draw(Camera &camera){
     // we now draw as many light bulbs as we have point lights.
     // glBindVertexArray(lightCubeVAO);
     // also draw the lamp object(s)
+
     lightCubeShader.use();
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 1.0f, 100.0f);
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 model;
     lightCubeShader.setMat4("projection", projection);
     lightCubeShader.setMat4("view", view);
     for (int i = 0; i < LightNum; i++)
     {
-        model = glm::translate(glm::mat4(1.0f), pointLightPositions[i]);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, pointLightPositions[i]);
         model = glm::scale(model, glm::vec3(0.2f)); // Make it a smaller cube
         lightCubeShader.setMat4("model", model);
-        // glDrawArrays(GL_TRIANGLES, 0, 36);
+        //glDrawArrays(GL_TRIANGLES, 0, 36);
         renderCube(1);
     }
 }
