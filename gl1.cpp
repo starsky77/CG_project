@@ -20,7 +20,9 @@ int objectType=0;
 bool postrender=false, edge = false, skybox=false,model_draw=false,
     display_corner = true, Motion=false,feedback=false,cursor_hidden=true,
     draw_request=false;
-ObjTree *tree=NULL;
+static const int MAX_OBJECTS=50;
+ObjTree *tree=NULL,*objects[MAX_OBJECTS];
+int current_object;
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -31,8 +33,8 @@ static const char *varyings[]={
 };
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
+double lastX = SCR_WIDTH / 2.0f;
+double lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
 // timing
@@ -97,6 +99,7 @@ int main()
     Shader lightingShader("shaders/cursor.vert","shaders/cursor.frag","shaders/cursor.geom");
     unsigned int feedback_vbo=lightingShader.vbo[0],select_xfb=lightingShader.xfb;
     unsigned int select_program=lightingShader.ID;
+    int object_cnt=0;
     // unsigned int select_program=Feedback_Initialize(&feedback_vbo,&select_xfb);
     // Shader lightingShader("shaders/1.color.vert", "shaders/1.color.frag");
     // Shader lightingShader("shaders/1.color_.vert", "shaders/1.color_.frag","shaders/pass_through.geom");
@@ -353,12 +356,15 @@ int main()
             lightingShader.setMat4("model",model);
             renderCube();
             if(draw_request){
-                if(!tree)tree=CreatLeafnode(4,'s',model,renderCube);
-                    else {
-                        ObjTree *p=tree->rightSibling;
-                        tree->rightSibling=CreatLeafnode(4,'s',model,renderCube);
-                        tree->rightSibling->rightSibling=p;
-                    }
+                if(!tree){
+                    objects[object_cnt]=tree=CreatLeafnode(object_cnt,'s',model,renderCube);
+                    object_cnt++;
+                }
+                else {
+                    objects[object_cnt]=CreatLeafnode(object_cnt,'s',model,renderCube);
+                    objects[object_cnt]->rightSibling=tree->rightSibling;
+                    tree->rightSibling=objects[object_cnt++];
+                }
                 draw_request=false;
             }
         }
@@ -370,10 +376,9 @@ int main()
         }
         if(feedback){
             glEndTransformFeedback();          
-            int obj;
             // glDisable(GL_RASTERIZER_DISCARD);
-            glGetNamedBufferSubData(buf,0,sizeof(int),&obj);
-            std::cout<<obj<<std::endl;
+            glGetNamedBufferSubData(buf,0,sizeof(int),&current_object);
+            std::cout<<current_object<<std::endl;
             //     bool b=glUnmapNamedBuffer(feedback_vbo);
             // glPauseTransformFeedback();
             // glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 5 * sizeof(int), NULL, GL_DYNAMIC_READ);
@@ -554,9 +559,25 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
         firstMouse = false;
     }
 
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+    double xoffset = xpos - lastX;
+    double yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
 
+    if(current_object&&feedback){
+        // // ObjectMove(objects,current_object,xoffset,yoffset);
+        glm::mat4 &model=objects[current_object]->model;
+        try{
+            double distance=glm::length(camera.Position-glm::vec3(model[4]));
+            auto rad=glm::vec3(xoffset,yoffset,0.0f);
+            rad*=(1.0/(double)SCR_HEIGHT*glm::radians(camera.Zoom))*distance;
+            auto rot=glm::mat3(model);
+            auto cam=glm::mat3(camera.Right,camera.Up,-camera.Front);
+            model=glm::translate(model,glm::vec3(cam*rad*rot));
+
+        }
+        catch(...){
+            std::cout<<"error";
+        };
+    }
     lastX = xpos;
     lastY = ypos;
 
