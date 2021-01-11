@@ -33,7 +33,7 @@ struct ObjTree
 };
 
 //selfMake类原子物体
-ObjTree* CreatLeafnode(int alias, char type,glm::mat4 &model,void (*Draw)())
+ObjTree* CreatLeafnode(int alias, char type,glm::mat4 &model,void (*Draw)(void))
 {
 	if (type != 's')
 	{
@@ -55,7 +55,7 @@ ObjTree* CreatLeafnode(int alias, char type,glm::mat4 &model,void (*Draw)())
 }
 
 //mesh model类原子物体
-ObjTree* CreatLeafnode(int alias, Model* mesh, char type, void (*Draw)())
+ObjTree* CreatLeafnode(int alias, Model* mesh, char type, void (*Draw)(void))
 {
 	if (type != 'm')
 	{

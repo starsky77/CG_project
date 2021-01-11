@@ -19,6 +19,7 @@ public:
     unsigned int ID;
     unsigned int xfb,vbo[2];
     // constructor generates the shader on the fly
+    Shader(){ }
     // ------------------------------------------------------------------------
     Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr,const char * varyings[]=nullptr)
     {

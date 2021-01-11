@@ -40,8 +40,16 @@ glm::vec3 LightPositions[] = {
 glm::vec3& lightPos(LightPositions[0]);
 // glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
-//Others
 
+//texture
+unsigned int diffuseMap, specularMap, selfMakeTex1, selfMakeTex2, selfMakeTex3;
+
+
+//shader
+Shader* cudeShader1 = NULL;
+Shader* cudeShader2 = NULL;
+
+//Others
 unsigned int depthMapFBO,depthMap;
 static const int SHADOW_WIDTH=800,SHADOW_HEIGHT=600;
 unsigned int loadCubemap(std::vector<std::string> faces);
@@ -52,6 +60,9 @@ bool postrender=false, edge = false, skybox=false,model_draw=false,
 static const int MAX_OBJECTS=50;
 ObjTree *tree=NULL,*objects[MAX_OBJECTS];
 int current_object;
+int ObjCount = 6;
+
+
 // settings
 
 static const char* varyings[] = {
@@ -75,7 +86,7 @@ int init()
 
 	// glfw window creation
 	// --------------------
-	window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+	window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL_project", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -113,18 +124,26 @@ int main()
 
 	// build and compile our shader zprogram
 	// Shader lightingShader("shaders/geom.vert","shaders/geom.frag","shaders/geom_.geom",varyings);
+
+
+	//shader
 	Shader lightingShader("shaders/cursor.vert", "shaders/cursor.frag", "shaders/cursor.geom");
+	Shader simpleShader("shaders/1.color.vs", "shaders/simple.fs");
+	Shader screenShader("shaders/view.vs", "shaders/core.fs");
+	Shader skyboxShader("shaders/skycube.vs", "shaders/skycube.fs");
+	Shader depthShader("shaders/1.color.vs", "shaders/simple.frag");
+	Shader cornerShader("shaders/view.vs", "shaders/core.frag");
+
+
+	cudeShader1 = &lightingShader;
+
 	unsigned int feedback_vbo = lightingShader.vbo[0], select_xfb = lightingShader.xfb;
 	unsigned int select_program = lightingShader.ID;
 	// unsigned int select_program=Feedback_Initialize(&feedback_vbo,&select_xfb);
 	// Shader lightingShader("shaders/1.color.vert", "shaders/1.color.frag");
 	// Shader lightingShader("shaders/1.color_.vert", "shaders/1.color_.frag","shaders/pass_through.geom");
 	// Shader lightCubeShader("shaders/1.light_cube.vs", "shaders/1.light_cube.fs");
-	Shader simpleShader("shaders/1.color.vs", "shaders/simple.fs");
-	Shader screenShader("shaders/view.vs", "shaders/core.fs");
-	Shader skyboxShader("shaders/skycube.vs", "shaders/skycube.fs");
-	Shader depthShader("shaders/1.color.vs", "shaders/simple.frag");
-	Shader cornerShader("shaders/view.vs", "shaders/core.frag");
+
 	// select buffers 
 	// ------------------------------------------------------------------
 	unsigned int tex, buf;
@@ -176,37 +195,39 @@ int main()
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	unsigned int cornerVAO, cornerVBO;
-	glGenVertexArrays(1, &cornerVAO);
-	glGenBuffers(1, &cornerVBO);
-	glBindVertexArray(cornerVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, cornerVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(corner), &corner, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-
-	// load models 
-	//Model temple("nanosuit/nanosuit.obj");
-	Light lights(LightPositions, 4);
-	// Model temple("mods/gallery/gallery.obj");
-	// load textures (we now use a utility function to keep the code more organized)
-	// -----------------------------------------------------------------------------
-	unsigned int diffuseMap = loadTexture("container2.png");
-	unsigned int specularMap = loadTexture("container2_specular.png");
-	//--------cube texture
-	std::vector<std::string> faces
-	{
-		"skybox/right.jpg",
-		"skybox/left.jpg",
-		"skybox/top.jpg",
-		"skybox/bottom.jpg",
-		"skybox/front.jpg",
-		"skybox/back.jpg"
-	};
-	unsigned int cubemapTexture = loadCubemap(faces);
+    unsigned int cornerVAO,cornerVBO;
+    glGenVertexArrays(1, &cornerVAO);
+    glGenBuffers(1, &cornerVBO);
+    glBindVertexArray(cornerVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, cornerVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(corner), &corner, GL_STATIC_DRAW);
+    glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,4*sizeof(float),(void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,4*sizeof(float),(void*)(2*sizeof(float)));
+    glEnableVertexAttribArray(1);
+    
+    // load models 
+    //Model temple("nanosuit/nanosuit.obj");
+    Light lights(LightPositions,4);
+    // Model temple("mods/gallery/gallery.obj");
+    // load textures (we now use a utility function to keep the code more organized)
+    // -----------------------------------------------------------------------------
+    diffuseMap = loadTexture("container2.png");
+    specularMap = loadTexture("container2_specular.png");
+	selfMakeTex1 = loadTexture("brickwall.jpg");
+	selfMakeTex2 = loadTexture("awesomeface.png");
+	selfMakeTex3 = loadTexture("container.jpg");
+    //--------cube texture
+    std::vector<std::string> faces
+    {
+        "skybox/right.jpg",
+        "skybox/left.jpg",
+        "skybox/top.jpg",
+        "skybox/bottom.jpg",
+        "skybox/front.jpg",
+        "skybox/back.jpg"
+    };
+    unsigned int cubemapTexture = loadCubemap(faces);
 
 	screenShader.use();
 	screenShader.setInt("screenTexture", 0);
@@ -240,8 +261,8 @@ int main()
 	lightingShader.setInt("material.diffuse", 0);
 	lightingShader.setInt("material.specular", 1);
 	lightingShader.setInt("shadowMap", 2);
-
 	lightingShader.setFloat("material.shininess", 64);
+
 	// render loop
 	// -----------
 	while (!glfwWindowShouldClose(window))
@@ -278,7 +299,6 @@ int main()
 		glm::vec3 box2Pos(0.3, 0.0, 1.2);
 		glm::mat4 lightSpaceTrans = glm::lookAt(lightPos, glm::vec3(0.0f), camera.WorldUp);
 
-		//��Ӱ�ֲ�ͼ��ʾ
 		if (display_corner) {
 			glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 			glEnable(GL_DEPTH_TEST);
@@ -339,26 +359,31 @@ int main()
 		// world transformation
 		lightingShader.setMat4("model", model);
 
+        // bind diffuse map
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        // bind specular map
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
+        if(display_corner){
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D,depthMap);
+        }
+
+		//use different texuture to rend the palne
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, selfMakeTex1);
+        // FIXME: should do the select pass in reverse order
+        lightingShader.setInt("alias",5);
+        renderPlane();
+        // render the cube
 		// bind diffuse map
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, diffuseMap);
-		// bind specular map
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, specularMap);
-		if (display_corner) {
-			glActiveTexture(GL_TEXTURE2);
-			glBindTexture(GL_TEXTURE_2D, depthMap);
-		}
-
-		// FIXME: should do the select pass in reverse order
-		lightingShader.setInt("alias", 5);
-		renderPlane();
-		lightingShader.setInt("alias", 3);
-		renderCube();
-
-		// also draw the lamp object
-		// glBindVertexArray(cubeVAO);
-		// glDrawArrays(GL_TRIANGLES, 0, 36);
+        lightingShader.setInt("alias",3);
+        renderCube();
+        // glBindVertexArray(cubeVAO);
+        // glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		glActiveTexture(GL_TEXTURE0);
 		model = glm::translate(model, box2Pos);
@@ -377,13 +402,25 @@ int main()
 			model = glm::mat4(glm::mat3(camera.Right, camera.Up, -camera.Front));
 			model = glm::translate(model, camera.Position * glm::mat3(model) + glm::vec3(0.0, 0.0, -3.0));
 			lightingShader.setMat4("model", model);
-			renderCube();
+			if (objectType % 2 == 0)
+				renderCube_2();
+			else
+				renderCube_3();
 			if (draw_request) {
 				if (!tree)
-					tree = CreatLeafnode(4, 's', model, renderCube);
+				{
+					if(objectType%2==0)
+						tree = CreatLeafnode(++ObjCount, 's', model, renderCube_2);
+					else
+						tree = CreatLeafnode(++ObjCount, 's', model, renderCube_3);
+				}
+					
 				else {
 					ObjTree* p = tree->rightSibling;
-					tree->rightSibling = CreatLeafnode(4, 's', model, renderCube);
+					if (objectType % 2 == 0)
+						tree->rightSibling = CreatLeafnode(++ObjCount, 's', model, renderCube_2);
+					else
+						tree->rightSibling = CreatLeafnode(++ObjCount, 's', model, renderCube_3);
 					tree->rightSibling->rightSibling = p;
 				}
 				draw_request = false;
@@ -417,7 +454,7 @@ int main()
 			skyboxShader.setMat4("view", skyview);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-			renderCube();
+			renderCube(0);
 			// glBindVertexArray(cubeVAO);
 			// glDrawArrays(GL_TRIANGLES,0,36);
 
@@ -432,7 +469,7 @@ int main()
 			simpleShader.setMat4("projection", projection);
 			simpleShader.setMat4("view", view);
 			simpleShader.setMat4("model", tmpmodel);
-			renderCube();
+			renderCube(0);
 			// glDrawArrays(GL_TRIANGLES,0,36);
 			glStencilMask(0xFF);
 			glEnable(GL_DEPTH_TEST);
@@ -680,8 +717,6 @@ inline void renderCube() {
 	renderCube(0);
 }
 void renderCube(int light) {
-
-
 	static float vertices[] = {
 		// positions          // normals           // texture coords
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
@@ -756,8 +791,199 @@ void renderCube(int light) {
 		glEnableVertexAttribArray(0);
 	}
 	glBindVertexArray(light ? lightCubeVAO : cubeVAO);
+		
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
+
+//Foolish way to implement 2 kinds of cude,it will be change next time
+void renderCube_2() {
+	// bind diffuse map
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, selfMakeTex1);
+	// bind specular map
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, specularMap);
+	static float vertices[] = {
+		// positions          // normals           // texture coords
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
+	};
+	// first, configure the cube's VAO (and VBO)
+	static unsigned int VBO = -1, cubeVAO = -1, lightCubeVAO;
+	if (cubeVAO == -1) {
+		glGenVertexArrays(1, &cubeVAO);
+		glGenBuffers(1, &VBO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		glBindVertexArray(cubeVAO);
+
+		// position attribute
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+
+		// second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
+		glGenVertexArrays(1, &lightCubeVAO);
+		glBindVertexArray(lightCubeVAO);
+
+		// we only need to bind to the VBO (to link it with glVertexAttribPointer), no need to fill it; the VBO's data already contains all we need (it's already bound, but we do it again for educational purposes)
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+	}
+	glBindVertexArray(cubeVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+
+//Foolish way to implement 2 kinds of cude,it will be change next time
+void renderCube_3() {
+	// bind diffuse map
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, selfMakeTex2);
+	// bind specular map
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, specularMap);
+	static float vertices[] = {
+		// positions          // normals           // texture coords
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
+	};
+	// first, configure the cube's VAO (and VBO)
+	static unsigned int VBO = -1, cubeVAO = -1, lightCubeVAO;
+	if (cubeVAO == -1) {
+		glGenVertexArrays(1, &cubeVAO);
+		glGenBuffers(1, &VBO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		glBindVertexArray(cubeVAO);
+
+		// position attribute
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+
+		// second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
+		glGenVertexArrays(1, &lightCubeVAO);
+		glBindVertexArray(lightCubeVAO);
+
+		// we only need to bind to the VBO (to link it with glVertexAttribPointer), no need to fill it; the VBO's data already contains all we need (it's already bound, but we do it again for educational purposes)
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+	}
+	glBindVertexArray(cubeVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 unsigned int Feedback_Initialize(unsigned int* _vbo, unsigned int* _xfb) {
 	static unsigned int xfb, sort_prog, geometry, vert, vbo[2];
 	glGenTransformFeedbacks(1, &xfb);

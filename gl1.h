@@ -11,6 +11,8 @@ void gen_preview_framebuffer();
 void renderPlane();
 void renderCube();
 void renderCube(int light);
+void renderCube_2();
+void renderCube_3();
 void click_callback(GLFWwindow* window,int button,int action,int mods);
 unsigned int Feedback_Initialize(unsigned int *_vbo=NULL,unsigned int *_xfb=NULL);
 unsigned int loadTexture(char const * path)
