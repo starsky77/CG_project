@@ -1,5 +1,9 @@
 #ifndef SHADER_H
 #define SHADER_H
+/* ------------------------------------------------------------------------
+Modifications: the geometry shader will now definetly have 
+a transform feedback object attached; 
+/ ------------------------------------------------------------------------*/
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -13,9 +17,10 @@ class Shader
 {
 public:
     unsigned int ID;
+    unsigned int xfb,vbo[2];
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
-    Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr)
+    Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr,const char * varyings[]=nullptr)
     {
         // 1. retrieve the vertex/fragment source code from filePath
         std::string vertexCode;
@@ -46,6 +51,8 @@ public:
             // if geometry shader path is present, also load a geometry shader
             if(geometryPath != nullptr)
             {
+                glGenTransformFeedbacks(1, &xfb);
+                glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, xfb);
                 gShaderFile.open(geometryPath);
                 std::stringstream gShaderStream;
                 gShaderStream << gShaderFile.rdbuf();
@@ -85,16 +92,27 @@ public:
         ID = glCreateProgram();
         glAttachShader(ID, vertex);
         glAttachShader(ID, fragment);
-        if(geometryPath != nullptr)
+        if(geometryPath != nullptr){
+
             glAttachShader(ID, geometry);
+            if(varyings!=nullptr)glTransformFeedbackVaryings(ID, sizeof(varyings)/sizeof(char*), varyings, GL_INTERLEAVED_ATTRIBS);
+        }
         glLinkProgram(ID);
         checkCompileErrors(ID, "PROGRAM");
         // delete the shaders as they're linked into our program now and no longer necessery
         glDeleteShader(vertex);
         glDeleteShader(fragment);
-        if(geometryPath != nullptr)
+        if(geometryPath != nullptr){
             glDeleteShader(geometry);
-
+            glUseProgram(ID);
+            // glGenVertexArrays(2, vao);
+            glGenBuffers(2, vbo);
+            for (int i = 0; i < 2; i++){
+                glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, vbo[i]);
+                glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 50 * sizeof(int), NULL, GL_DYNAMIC_READ);
+                glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, i, vbo[i]);
+            }
+        }
     }
     // activate the shader
     // ------------------------------------------------------------------------
@@ -162,6 +180,7 @@ public:
     }
 
 private:
+    unsigned int vao[2];
     // utility function for checking shader compilation/linking errors.
     // ------------------------------------------------------------------------
     void checkCompileErrors(GLuint shader, std::string type)
