@@ -1,6 +1,6 @@
 #version 450 core
 layout (triangles) in;
-layout (triangle_strip, max_vertices = 3) out;
+layout (stream=0,triangle_strip, max_vertices = 3) out;
 layout (binding=0,r32i) uniform iimageBuffer alias_buffer;
 in VS_OUT {
     vec2 texCoords;
@@ -11,6 +11,7 @@ in VS_OUT {
 out vec2 TexCoords; 
 out float diffuse;
 uniform int alias;
+// layout (stream=1,points,max_vertices=1) out;
 
 void main(){
     int i;
@@ -36,12 +37,16 @@ void main(){
     if(i==3){
         // selected_alias=alias;
         imageStore(alias_buffer,0 , ivec4(alias));
-        diffuse=0.0;
+        diffuse=0.5;
     }
     else diffuse=1.0;
     for(i=0;i<3;i++){
         gl_Position = gl_in[i].gl_Position;
         TexCoords = gs_in[i].texCoords;
+        // if(length(gs_in[i].pickCoords)<0.1)
+        gl_PointSize=gl_in[i].gl_PointSize;
+        // EmitStreamVertex(1);
+        // EndStreamPrimitive(1);
         EmitVertex();
     }
     EndPrimitive();

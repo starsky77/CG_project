@@ -188,7 +188,7 @@ int main()
 
 	// load models 
 	//Model temple("nanosuit/nanosuit.obj");
-	//DEBUG£ºÓÉÓÚÄ£ÐÍÌ«´ó£¬ÏÖÔÚÔÝÊ±²»ÔØÈëÄ£ÐÍ£¬·½±ãµ÷ÊÔ
+	//DEBUGï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½Ì«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	Light lights(LightPositions, 4);
 	// Model temple("mods/gallery/gallery.obj");
 	// load textures (we now use a utility function to keep the code more organized)
@@ -245,6 +245,7 @@ int main()
 	// -----------
 	while (!glfwWindowShouldClose(window))
 	{
+		glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 		// per-frame time logic
 		float currentFrame = glfwGetTime();
 		// lightingShader.setFloat("time",currentFrame);
@@ -276,7 +277,7 @@ int main()
 		glm::vec3 box2Pos(0.3, 0.0, 1.2);
 		glm::mat4 lightSpaceTrans = glm::lookAt(lightPos, glm::vec3(0.0f), camera.WorldUp);
 
-		//ÒõÓ°¾Ö²¿Í¼ÏÔÊ¾
+		//ï¿½ï¿½Ó°ï¿½Ö²ï¿½Í¼ï¿½ï¿½Ê¾
 		if (display_corner) {
 			glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 			glEnable(GL_DEPTH_TEST);
@@ -349,10 +350,10 @@ int main()
 		}
 
 		// FIXME: should do the select pass in reverse order
-		//»æÖÆÏä×Ó¹¹³ÉµÄµ×Ãæ
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¹ï¿½ï¿½ÉµÄµï¿½ï¿½ï¿½
 		lightingShader.setInt("alias", 5);
 		renderPlane();
-		//»æÖÆµÚÒ»¸öÏä×Ó
+		//ï¿½ï¿½ï¿½Æµï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		lightingShader.setInt("alias", 3);
 		renderCube();
 
@@ -360,7 +361,7 @@ int main()
 		// glBindVertexArray(cubeVAO);
 		// glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		//µ¥¶À»æÖÆÁíÒ»¸öÏä×Ó
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		glActiveTexture(GL_TEXTURE0);
 		model = glm::translate(model, box2Pos);
 		lightingShader.setMat4("model", model);
@@ -369,20 +370,20 @@ int main()
 
 		lights.Draw(camera);
 
-		//NOTICE£º×¢Òâlights.Draw»á¸ü»»×ÅÉ«Æ÷£¬¹ÊÎñ±ØÔÚ¸Ãº¯Êý½áÊøºó»»»ØlightingShader
+		//NOTICEï¿½ï¿½×¢ï¿½ï¿½lights.Drawï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¸Ãºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ó»»»ï¿½lightingShader
 		lightingShader.use();
 
-		//»æÖÆObjTree
+		//ï¿½ï¿½ï¿½ï¿½ObjTree
 		if (tree) {
 			DrawObjCollection(tree, lightingShader);
 		}
 
-		//ÔÚÆôÓÃÊó±ê£¨½¨Ä£Ä£Ê½£©²¢ÇÒÑ¡ÖÐÌØ¶¨ÎïÌå£¨Í¨¹ýÊó±êÖÐ¼ü£©Ê±£¬¶Ôdraw_request½øÐÐÏìÓ¦
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê£¨ï¿½ï¿½Ä£Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½ï¿½å£¨Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½draw_requestï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦
 		if (!cursor_hidden && objectType) {
 			model = glm::mat4(glm::mat3(camera.Right, camera.Up, -camera.Front));
 			model = glm::translate(model, camera.Position * glm::mat3(model) + glm::vec3(0.0, 0.0, -3.0));
 			lightingShader.setMat4("model", model);
-			//ÆÁÄ»ÖÐÊ¼ÖÕÏÔÊ¾´ý»æÖÆµÄÎïÌå£¬Ëü»á¸úËæ¾µÍ·ÒÆ¶¯
+			//ï¿½ï¿½Ä»ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½å£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ¾µÍ·ï¿½Æ¶ï¿½
 			renderCube();
 			if (draw_request) {
 				if (!tree)
@@ -395,7 +396,7 @@ int main()
 				draw_request = false;
 			}
 		}
-		//»æÖÆÄ£ÐÍ
+		//ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½
 		if (model_draw) {
 			// lightingShader.use();
 			lightingShader.setInt("alias", 2);
@@ -415,7 +416,7 @@ int main()
 
 			glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
 		}
-		//¼ÓÔØÌì¿ÕºÐ
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õºï¿½
 		if (skybox) {
 			glStencilMask(0x00);
 			// skybox
@@ -434,7 +435,7 @@ int main()
 			// glDepthMask(GL_TRUE);
 			glDepthFunc(GL_LESS);
 		}
-		//¸ÄÎªÊ¹ÓÃ±ßÔµÔöÇ¿¾í»ýºËäÖÈ¾
+		//ï¿½ï¿½ÎªÊ¹ï¿½Ã±ï¿½Ôµï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¾
 		if (edge) {
 			glStencilFunc(GL_NOTEQUAL, 1, 0XFF);
 			// glStencilMask(0x00);
@@ -588,13 +589,29 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 		firstMouse = false;
 	}
 
-	float xoffset = xpos - lastX;
-	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+	double xoffset = xpos - lastX;
+    double yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
 
-	lastX = xpos;
-	lastY = ypos;
+    if(current_object&&feedback){
+        // // ObjectMove(objects,current_object,xoffset,yoffset);
+        glm::mat4 &model=objects[current_object]->model;
+        try{
+            double distance=glm::length(camera.Position-glm::vec3(model[4]));
+            auto rad=glm::vec3(xoffset,yoffset,0.0f);
+            rad*=(1.0/(double)SCR_WIDTH*glm::radians(camera.Zoom))*distance;
+            auto rot=glm::mat3(model);
+            auto cam=glm::mat3(camera.Right,camera.Up,-camera.Front);
+            model=glm::translate(model,glm::vec3(cam*rad*rot));
 
-	if (cursor_hidden)camera.ProcessMouseMovement(xoffset, yoffset);
+        }
+        catch(...){
+            std::cout<<"error";
+        };
+    }
+    lastX = xpos;
+    lastY = ypos;
+
+    if(cursor_hidden)camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called

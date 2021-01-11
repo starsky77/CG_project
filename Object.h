@@ -108,6 +108,7 @@ void DrawObjCollection(ObjTree* T,Shader &shader)
 	{
 		DrawObjCollection(T->rightSibling,shader);
 	}
+	shader.setInt("alias",T->alias);
 	shader.setMat4("model",T->model);
     T->Drawfp();
 	return;
