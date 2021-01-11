@@ -42,14 +42,16 @@ glm::vec3& lightPos(LightPositions[0]);
 
 //Others
 
-unsigned int depthMapFBO, depthMap;
-static const int SHADOW_WIDTH = 800, SHADOW_HEIGHT = 600;
+unsigned int depthMapFBO,depthMap;
+static const int SHADOW_WIDTH=800,SHADOW_HEIGHT=600;
 unsigned int loadCubemap(std::vector<std::string> faces);
-int objectType = 0;
-bool postrender = false, edge = false, skybox = false, model_draw = false,
-display_corner = true, Motion = false, feedback = false, cursor_hidden = true,
-draw_request = false;
-ObjTree* tree = NULL;
+int objectType=0;
+bool postrender=false, edge = false, skybox=false,model_draw=false,
+    display_corner = true, Motion=false,feedback=false,cursor_hidden=true,
+    draw_request=false;
+static const int MAX_OBJECTS=50;
+ObjTree *tree=NULL,*objects[MAX_OBJECTS];
+int current_object;
 // settings
 
 static const char* varyings[] = {
@@ -188,7 +190,6 @@ int main()
 
 	// load models 
 	//Model temple("nanosuit/nanosuit.obj");
-	//DEBUG������ģ��̫��������ʱ������ģ�ͣ��������
 	Light lights(LightPositions, 4);
 	// Model temple("mods/gallery/gallery.obj");
 	// load textures (we now use a utility function to keep the code more organized)
@@ -350,10 +351,8 @@ int main()
 		}
 
 		// FIXME: should do the select pass in reverse order
-		//�������ӹ��ɵĵ���
 		lightingShader.setInt("alias", 5);
 		renderPlane();
-		//���Ƶ�һ������
 		lightingShader.setInt("alias", 3);
 		renderCube();
 
@@ -361,7 +360,6 @@ int main()
 		// glBindVertexArray(cubeVAO);
 		// glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		//����������һ������
 		glActiveTexture(GL_TEXTURE0);
 		model = glm::translate(model, box2Pos);
 		lightingShader.setMat4("model", model);
@@ -369,21 +367,16 @@ int main()
 
 
 		lights.Draw(camera);
-
-		//NOTICE��ע��lights.Draw�������ɫ����������ڸú��������󻻻�lightingShader
 		lightingShader.use();
 
-		//����ObjTree
 		if (tree) {
 			DrawObjCollection(tree, lightingShader);
 		}
 
-		//��������꣨��ģģʽ������ѡ���ض����壨ͨ������м���ʱ����draw_request������Ӧ
 		if (!cursor_hidden && objectType) {
 			model = glm::mat4(glm::mat3(camera.Right, camera.Up, -camera.Front));
 			model = glm::translate(model, camera.Position * glm::mat3(model) + glm::vec3(0.0, 0.0, -3.0));
 			lightingShader.setMat4("model", model);
-			//��Ļ��ʼ����ʾ�����Ƶ����壬������澵ͷ�ƶ�
 			renderCube();
 			if (draw_request) {
 				if (!tree)
@@ -396,7 +389,6 @@ int main()
 				draw_request = false;
 			}
 		}
-		//����ģ��
 		if (model_draw) {
 			// lightingShader.use();
 			lightingShader.setInt("alias", 2);
@@ -405,10 +397,8 @@ int main()
 		}
 		if (feedback) {
 			glEndTransformFeedback();
-			int obj;
-			// glDisable(GL_RASTERIZER_DISCARD);
-			glGetNamedBufferSubData(buf, 0, sizeof(int), &obj);
-			std::cout << obj << std::endl;
+			glGetNamedBufferSubData(buf,0,sizeof(int),&current_object);
+            std::cout<<current_object<<std::endl;
 			//     bool b=glUnmapNamedBuffer(feedback_vbo);
 			// glPauseTransformFeedback();
 			// glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 5 * sizeof(int), NULL, GL_DYNAMIC_READ);
@@ -416,7 +406,6 @@ int main()
 
 			glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
 		}
-		//������պ�
 		if (skybox) {
 			glStencilMask(0x00);
 			// skybox
@@ -435,7 +424,6 @@ int main()
 			// glDepthMask(GL_TRUE);
 			glDepthFunc(GL_LESS);
 		}
-		//��Ϊʹ�ñ�Ե��ǿ��������Ⱦ
 		if (edge) {
 			glStencilFunc(GL_NOTEQUAL, 1, 0XFF);
 			// glStencilMask(0x00);
