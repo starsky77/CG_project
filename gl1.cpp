@@ -95,15 +95,15 @@ int main()
 
     // build and compile our shader zprogram
     // ------------------------------------
-    // Shader lightingShader("shaders/geom.vert","shaders/geom.frag","shaders/geom_.geom",varyings);
     Shader lightingShader("shaders/cursor.vert","shaders/cursor.frag","shaders/cursor.geom");
+    // Shader lightingShader("shaders/geom.vert","shaders/geom.frag","shaders/geom_.geom",varyings);
+    // Shader lightingShader("shaders/1.color.vert", "shaders/1.color.frag");
+    // Shader lightingShader("shaders/1.color_.vert", "shaders/1.color_.frag","shaders/pass_through.geom");
+    // Shader lightCubeShader("shaders/1.light_cube.vs", "shaders/1.light_cube.fs");
     unsigned int feedback_vbo=lightingShader.vbo[0],select_xfb=lightingShader.xfb;
     unsigned int select_program=lightingShader.ID;
     int object_cnt=0;
     // unsigned int select_program=Feedback_Initialize(&feedback_vbo,&select_xfb);
-    // Shader lightingShader("shaders/1.color.vert", "shaders/1.color.frag");
-    // Shader lightingShader("shaders/1.color_.vert", "shaders/1.color_.frag","shaders/pass_through.geom");
-    // Shader lightCubeShader("shaders/1.light_cube.vs", "shaders/1.light_cube.fs");
     Shader simpleShader("shaders/1.color.vs","shaders/simple.fs");
     Shader screenShader("shaders/view.vs","shaders/core.fs");
     Shader skyboxShader("shaders/skycube.vs","shaders/skycube.fs");
@@ -229,6 +229,8 @@ int main()
     {
         // per-frame time logic
         // --------------------
+        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+
         float currentFrame = glfwGetTime();
         // lightingShader.setFloat("time",currentFrame);
         deltaTime = currentFrame - lastFrame;
@@ -568,7 +570,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
         try{
             double distance=glm::length(camera.Position-glm::vec3(model[4]));
             auto rad=glm::vec3(xoffset,yoffset,0.0f);
-            rad*=(1.0/(double)SCR_HEIGHT*glm::radians(camera.Zoom))*distance;
+            rad*=(1.0/(double)SCR_WIDTH*glm::radians(camera.Zoom))*distance;
             auto rot=glm::mat3(model);
             auto cam=glm::mat3(camera.Right,camera.Up,-camera.Front);
             model=glm::translate(model,glm::vec3(cam*rad*rot));
@@ -737,113 +739,4 @@ void renderCube(int light){
     }
     glBindVertexArray(light?lightCubeVAO:cubeVAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
-}
-unsigned int Feedback_Initialize(unsigned int *_vbo,unsigned int *_xfb){
-    static unsigned int xfb,sort_prog,geometry,vert,vbo[2];
-    glGenTransformFeedbacks(1, &xfb);
-    glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, xfb);
-
-    sort_prog = glCreateProgram();
-
-
-    static const char *sort_vs_source =
-            "#version 410\n"
-            "\n"
-            "uniform mat4 model_matrix;\n"
-            "\n"
-            "layout (location = 0) in vec4 position;\n"
-            "layout (location = 1) in vec3 normal;\n"
-            "\n"
-            "out vec3 vs_normal;\n"
-            "\n"
-            "void main(void)\n"
-            "{\n"
-            "    vs_normal = (model_matrix * vec4(normal, 0.0)).xyz;\n"
-            "    gl_Position = model_matrix * position;\n"
-            "}\n";
-
-    static const char *sort_gs_source =
-        "#version 410\n"
-        "\n"
-        "layout (triangles) in;\n"
-        "layout (points, max_vertices = 3) out;\n"
-        "\n"
-        "uniform mat4 projection_matrix;\n"
-        "\n"
-        "in vec3 vs_normal[];\n"
-        "out int selected_alias;\n"
-        "layout (stream = 0) out vec4 rf_position;\n"
-        "layout (stream = 0) out vec3 rf_normal;\n"
-        "\n"
-        "layout (stream = 1) out vec4 lf_position;\n"
-        "layout (stream = 1) out vec3 lf_normal;\n"
-        "\n"
-        "void main(void)\n"
-        "{\n"
-        "    vec4 A = gl_in[0].gl_Position;\n"
-        "    vec4 B = gl_in[1].gl_Position;\n"
-        "    vec4 C = gl_in[2].gl_Position;\n"
-        "    vec3 AB = (B - A).xyz;\n"
-        "    vec3 AC = (C - A).xyz;\n"
-        "    vec3 face_normal = cross(AB, AC);\n"
-        "    int i;\n"
-        "    selected_alias=100;\n"
-        "    if (face_normal.x < 0.0)\n"
-        "    {\n"
-        "        for (i = 0; i < gl_in.length(); i++)\n"
-        "        {\n"
-        "            rf_position = projection_matrix * (gl_in[i].gl_Position - vec4(30.0, 0.0, 0.0, 0.0));\n"
-        "            rf_normal = vs_normal[i];\n"
-        "            EmitStreamVertex(0);\n"
-        "        }\n"
-        "        EndStreamPrimitive(0);\n"
-        "    }\n"
-        "    else\n"
-        "    {\n"
-        "        for (i = 0; i < gl_in.length(); i++)\n"
-        "        {\n"
-        "            lf_position = projection_matrix * (gl_in[i].gl_Position + vec4(30.0, 0.0, 0.0, 0.0));\n"
-        "            lf_normal = vs_normal[i];\n"
-        "            EmitStreamVertex(1);\n"
-        "        }\n"
-        "        EndStreamPrimitive(1);\n"
-        "    }\n"
-        "}\n";
-    // vglAttachShaderSource(sort_prog, GL_VERTEX_SHADER, sort_vs_source);
-    // vglAttachShaderSource(sort_prog, GL_GEOMETRY_SHADER, sort_gs_source);
-    geometry = glCreateShader(GL_GEOMETRY_SHADER);
-    vert = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(geometry, 1, &sort_gs_source, NULL);
-    glCompileShader(geometry);
-    glShaderSource(vert, 1, &sort_vs_source, NULL);
-    glCompileShader(vert);
-    glAttachShader(sort_prog,vert);
-    glAttachShader(sort_prog,geometry);
-
-    static const char * varyings[] =
-    {
-        "selected_alias"
-    };
-
-    glTransformFeedbackVaryings(sort_prog, 1, varyings, GL_INTERLEAVED_ATTRIBS);
-
-    glLinkProgram(sort_prog);
-    glUseProgram(sort_prog);
-
-    // model_matrix_pos = glGetUniformLocation(sort_prog, "model");
-    // projection_matrix_pos = glGetUniformLocation(sort_prog, "projection");
-
-    // glGenVertexArrays(2, vao);
-    glGenBuffers(2, vbo);
-
-    for (int i = 0; i < 2; i++){
-        glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, vbo[i]);
-        glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 5 * sizeof(GLfloat), NULL, GL_DYNAMIC_COPY);
-        glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, i, vbo[i]);
-    }
-    if(_xfb){
-        *_vbo=vbo[0];
-        *_xfb=xfb;
-    }
-    return sort_prog;
 }

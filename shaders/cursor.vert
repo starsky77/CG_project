@@ -20,4 +20,6 @@ void main()
     vec2 tmp=gl_Position.xy;
     tmp/=gl_Position.w;
     vs_out.pickCoords=tmp-pickPosition;
+    if(length(vs_out.pickCoords)<0.05)gl_PointSize=20.0;
+        else gl_PointSize=10.0;
 }
