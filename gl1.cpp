@@ -32,10 +32,10 @@ float lastFrame = 0.0f;
 
 // lighting
 glm::vec3 LightPositions[] = {
-	glm::vec3(1.2f, 1.0f, 3.0f),
-	glm::vec3(1.2f, 2.0f, 1.0f),
+	glm::vec3(1.2f, 2.0f, 0.0f)
+	/*glm::vec3(1.2f, 1.0f, 3.0f),
 	glm::vec3(-1.2f, 2.0f, 2.0f),
-	glm::vec3(-1.2f, 2.0f, -5.0f)
+	glm::vec3(-1.2f, 2.0f, -5.0f)*/
 };
 glm::vec3& lightPos(LightPositions[0]);
 // glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
@@ -127,7 +127,10 @@ int main()
 
 
 	//shader
-	Shader lightingShader("shaders/cursor.vert", "shaders/cursor.frag", "shaders/cursor.geom");
+	//Shader lightingShader("shaders/cursor.vert", "shaders/cursor.frag", "shaders/cursor.geom");
+	Shader lightingShader("shaders/1.color.vert", "shaders/1.color.frag");
+	// Shader lightingShader("shaders/1.color_.vert", "shaders/1.color_.frag","shaders/pass_through.geom");
+	// Shader lightCubeShader("shaders/1.light_cube.vs", "shaders/1.light_cube.fs");
 	Shader simpleShader("shaders/1.color.vs", "shaders/simple.fs");
 	Shader screenShader("shaders/view.vs", "shaders/core.fs");
 	Shader skyboxShader("shaders/skycube.vs", "shaders/skycube.fs");
@@ -140,9 +143,7 @@ int main()
 	unsigned int feedback_vbo = lightingShader.vbo[0], select_xfb = lightingShader.xfb;
 	unsigned int select_program = lightingShader.ID;
 	// unsigned int select_program=Feedback_Initialize(&feedback_vbo,&select_xfb);
-	// Shader lightingShader("shaders/1.color.vert", "shaders/1.color.frag");
-	// Shader lightingShader("shaders/1.color_.vert", "shaders/1.color_.frag","shaders/pass_through.geom");
-	// Shader lightCubeShader("shaders/1.light_cube.vs", "shaders/1.light_cube.fs");
+	
 
 	// select buffers 
 	// ------------------------------------------------------------------
@@ -208,8 +209,8 @@ int main()
     
     // load models 
     //Model temple("nanosuit/nanosuit.obj");
-    Light lights(LightPositions,4);
-    // Model temple("mods/gallery/gallery.obj");
+    Light lights(LightPositions,1);
+   // Model temple("gallery/gallery.obj");
     // load textures (we now use a utility function to keep the code more organized)
     // -----------------------------------------------------------------------------
     diffuseMap = loadTexture("container2.png");
@@ -318,6 +319,11 @@ int main()
 			renderPlane();
 			// render the cube
 			renderCube();
+
+			if (tree)
+			{
+				DrawObjCollection(tree, depthShader);
+			}
 
 			model = glm::translate(model, box2Pos);
 			depthShader.setMat4("model", model);
@@ -802,7 +808,7 @@ void renderCube_2() {
 	glBindTexture(GL_TEXTURE_2D, selfMakeTex1);
 	// bind specular map
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, specularMap);
+	glBindTexture(GL_TEXTURE_2D, selfMakeTex1);
 	static float vertices[] = {
 		// positions          // normals           // texture coords
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
@@ -888,7 +894,7 @@ void renderCube_3() {
 	glBindTexture(GL_TEXTURE_2D, selfMakeTex2);
 	// bind specular map
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, specularMap);
+	glBindTexture(GL_TEXTURE_2D, selfMakeTex2);
 	static float vertices[] = {
 		// positions          // normals           // texture coords
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
