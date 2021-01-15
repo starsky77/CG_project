@@ -17,7 +17,7 @@ unsigned int depthMapFBO, depthMap;
 static const int SHADOW_WIDTH = 800, SHADOW_HEIGHT = 600;
 unsigned int loadCubemap(std::vector<std::string> faces);
 int objectType = 0;
-bool postrender = false, edge = false, skybox = false, model_draw = false,
+bool postrender = false, edge = true, skybox = false, model_draw = false,
 	 display_corner = true, Motion = false, feedback = false, cursor_hidden = true,
 	 draw_request = false;
 static const int MAX_OBJECTS = 50;
@@ -227,10 +227,10 @@ int main()
 		// --------------------
 		glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 		// Shader &genericShader=feedback?cursorShader:lightingShader;
-		Shader &genericShader=shader_selection?lightingShader:cursorShader;
+		Shader &genericShader=cursor_hidden?lightingShader:cursorShader;
 		// if(!shader_selection)glEnable(GL_RASTERIZER_DISCARD);
 
-		float currentFrame = glfwGetTime();
+		double currentFrame = glfwGetTime();
 		// genericShader.setFloat("time",currentFrame);
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
@@ -255,7 +255,7 @@ int main()
 		// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		// be sure to activate shader when setting uniforms/drawing objects
-		float scale = 1.02;
+		float scale = 1.02f;
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 1.0f, 100.0f);
 		glm::mat4 view = camera.GetViewMatrix();
 		glm::mat4 model = glm::mat4(1.0f);
@@ -352,9 +352,11 @@ int main()
 		model = glm::translate(model, box2Pos);
 		genericShader.setMat4("model", model);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+		simpleShader.setMat4("projection", projection);
+		simpleShader.setMat4("view", view);
 		if (tree)
 		{
-			DrawObjCollection(tree, genericShader);
+			DrawObjCollection(tree, genericShader,current_object,&simpleShader);
 		}
 		if (!cursor_hidden && objectType)
 		{
@@ -429,7 +431,7 @@ int main()
 			simpleShader.setMat4("projection", projection);
 			simpleShader.setMat4("view", view);
 			simpleShader.setMat4("model", tmpmodel);
-			renderCube();
+			// renderCube();
 			// glDrawArrays(GL_TRIANGLES,0,36);
 			glStencilMask(0xFF);
 			glEnable(GL_DEPTH_TEST);
@@ -537,8 +539,8 @@ void processInput(GLFWwindow *window)
 		display_corner = !display_corner;
 	if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
 		Motion = !Motion;
-	if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
-		shader_selection=!shader_selection;
+	// if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
+	// 	shader_selection=!shader_selection;
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
 		if (cursor_hidden)
@@ -622,7 +624,7 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 	else
 	{
 		if (yoffset > 0)
-			objectType += yoffset;
+			objectType += int(yoffset);
 		else
 			objectType = 0;
 	}
@@ -691,8 +693,10 @@ void renderPlane()
 	//use different texuture to rend the plane
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, floor_tex);
+	glStencilMask(0x0);
 	glBindVertexArray(planeVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glStencilMask(0xFF);
 }
 inline void renderCube()
 {

@@ -97,20 +97,36 @@ ObjTree* UnionTree(int Palias, ObjTree* T1, ObjTree* T2)
 
 
 //绘制T为根的所有物体集合
-void DrawObjCollection(ObjTree* T,Shader &shader)
+void DrawObjCollection(ObjTree* T,Shader &shader,int selected_alias=-1,Shader *EdgeShader=NULL)
 {
-
 	if (T->leftChild != NULL)
 	{
-		DrawObjCollection(T->leftChild,shader);
+		DrawObjCollection(T->leftChild,shader,selected_alias,EdgeShader);
 	}
 	else if (T->rightSibling != NULL)
 	{
-		DrawObjCollection(T->rightSibling,shader);
+		DrawObjCollection(T->rightSibling,shader,selected_alias,EdgeShader);
 	}
 	shader.setInt("alias",T->alias);
 	shader.setMat4("model",T->model);
-    T->Drawfp();
+	if(selected_alias!=-1&&T->alias==selected_alias){
+		float fscale=1.02f;
+		glm::mat4 tmpmodel=glm::scale(T->model,glm::vec3(fscale,fscale,fscale));
+		glStencilMask(0xFF);
+		T->Drawfp();
+		glStencilFunc(GL_NOTEQUAL, 1, 0XFF);
+		// glStencilMask(0x00);
+		// glDisable(GL_DEPTH_TEST);
+		EdgeShader->use();
+		EdgeShader->setMat4("model", tmpmodel);
+		T->Drawfp();
+		// glDrawArrays(GL_TRIANGLES,0,36);
+		glStencilMask(0x0);
+		// glEnable(GL_DEPTH_TEST);
+		glStencilFunc(GL_ALWAYS, 1, 0XFF);
+		shader.use();
+	}
+    else T->Drawfp();
 	return;
 }
 
