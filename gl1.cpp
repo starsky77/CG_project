@@ -12,7 +12,6 @@
 #include "gl1.h"
 #include "light.h"
 #include "Object.h"
-int shader_selection=0;
 unsigned int depthMapFBO, depthMap;
 static const int SHADOW_WIDTH = 800, SHADOW_HEIGHT = 600;
 unsigned int loadCubemap(std::vector<std::string> faces);
@@ -22,7 +21,7 @@ bool postrender = false, edge = true, skybox = false, model_draw = false,
 	 draw_request = false;
 static const int MAX_OBJECTS = 50;
 ObjTree *tree = NULL, *objects[MAX_OBJECTS];
-int current_object;
+int current_object,object_cnt;
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -102,7 +101,7 @@ int main()
 	// Shader lightCubeShader("shaders/1.light_cube.vs", "shaders/1.light_cube.fs");
 	// unsigned int feedback_vbo = lightingShader.vbo[0], select_xfb = lightingShader.xfb;
 	// unsigned int select_program = lightingShader.ID;
-	int object_cnt = 0;
+	object_cnt = 0;
 	// unsigned int select_program=Feedback_Initialize(&feedback_vbo,&select_xfb);
 	Shader simpleShader("shaders/1.color.vs", "shaders/simple.fs");
 	Shader screenShader("shaders/view.vs", "shaders/core.fs");
@@ -336,7 +335,7 @@ int main()
 		}
 
 		// FIXME: should do the select pass in reverse order
-		genericShader.setInt("alias", 5);
+		genericShader.setInt("alias", 0);
 		renderPlane();
 		// bind diffuse map
 		glActiveTexture(GL_TEXTURE0);
@@ -393,10 +392,11 @@ int main()
 			// glDisable(GL_RASTERIZER_DISCARD);
 			glGetNamedBufferSubData(buf, 0, sizeof(int), &current_object);
 			std::cout << current_object << std::endl;
+			static int none[1]={-1};
 			//     bool b=glUnmapNamedBuffer(feedback_vbo);
 			// glPauseTransformFeedback();
 			// glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 5 * sizeof(int), NULL, GL_DYNAMIC_READ);
-			glBufferData(GL_TEXTURE_BUFFER, sizeof(int), NULL, GL_DYNAMIC_READ);
+			glBufferData(GL_TEXTURE_BUFFER, sizeof(int), none, GL_DYNAMIC_READ);
 
 			// glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
 		}
@@ -590,7 +590,7 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 	double xoffset = xpos - lastX;
 	double yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
 
-	if (current_object && feedback)
+	if (current_object > 0 && feedback &&current_object < object_cnt)
 	{
 		// // ObjectMove(objects,current_object,xoffset,yoffset);
 		glm::mat4 &model = objects[current_object]->model;
