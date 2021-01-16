@@ -28,6 +28,9 @@ extern bool postrender = false, edge = true, skybox = false, model_draw = false,
 display_corner = true, Motion = false, feedback = false, cursor_hidden = true,
 draw_request = false;
 
+//mesh
+extern Model* mesh_Bunny = NULL;
+extern Shader* meshShader = NULL;
 
 //vertices
 float planeVertices[] = {
@@ -94,6 +97,7 @@ void renderPlane();
 void renderCube();
 void renderCube_2();
 void renderCube_3();
+void renderMesh_1();
 void renderCube(int light);
 void click_callback(GLFWwindow* window,int button,int action,int mods);
 unsigned int loadCubemap(std::vector<std::string> faces);
@@ -235,6 +239,15 @@ void renderCube_3()
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, cube_tex);
 	renderCube(0);
+}
+
+
+void renderMesh_1()
+{
+	unsigned int diffuseMap = loadTexture("container2.png");
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, diffuseMap);
+	mesh_Bunny->Draw(*meshShader);
 }
 
 void renderCube(int light)

@@ -40,6 +40,8 @@ ObjTree* tree = NULL, * objects[MAX_OBJECTS];
 int current_object, object_cnt = 1;
 
 
+
+
 int init()
 {
 	// glfw: initialize and configure
@@ -100,6 +102,8 @@ int main()
 	Shader skyboxShader("shaders/skycube.vs", "shaders/skycube.fs");
 	Shader depthShader("shaders/1.color.vs", "shaders/simple.frag");
 	Shader cornerShader("shaders/view.vs", "shaders/core.frag");
+
+	meshShader = &lightingShader;
 	// Shader lightingShader("shaders/geom.vert","shaders/geom.frag","shaders/geom_.geom",varyings);
 	// Shader lightingShader("shaders/1.color_.vert", "shaders/1.color_.frag","shaders/pass_through.geom");
 	// Shader lightCubeShader("shaders/1.light_cube.vs", "shaders/1.light_cube.fs");
@@ -206,10 +210,13 @@ int main()
 
 	//----------------------------------------------------------------------------------------------------
 	// load models texture and light
-	//Model temple("mod/dragon/dragon.obj");
+	//Model temple("mod/nanosuit/nanosuit.obj");
+	//Model temple("mod/bmw/bmw.obj");
+	Model temple("mod/bunny/bunny.obj");
 	//Model temple("nanosuit/nanosuit.obj");
-	Model temple("gallery/gallery.obj");
+	//Model temple("gallery/gallery.obj");
 	Light lights(LightPositions, 4);
+	mesh_Bunny = new Model("mod/bunny/bunny.obj");
 	unsigned int diffuseMap = loadTexture("container2.png");
 	unsigned int specularMap = loadTexture("container2_specular.png");
 
@@ -347,49 +354,61 @@ int main()
 			model = glm::mat4(glm::mat3(camera.Right, camera.Up, -camera.Front));
 			model = glm::translate(model, camera.Position * glm::mat3(model) + glm::vec3(0.0, 0.0, -3.0));
 			genericShader.setMat4("model", model);
-			if (objectType % 3 == 0)
+			if (objectType % 4 == 0)
 			{
 				renderCube();
 			}
-			else if (objectType % 3 == 1)
+			else if (objectType % 4 == 1)
 			{
 				renderCube_2();
 			}
-			else if (objectType % 3 == 2)
+			else if (objectType % 4 == 2)
 			{
 				renderCube_3();
+			}
+			else if (objectType % 4 == 3)
+			{
+				renderMesh_1();
 			}
 			if (draw_request)
 			{
 				if (!tree)
 				{
-					if (objectType % 3 == 0)
+					if (objectType % 4 == 0)
 					{
 						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, renderCube);
 					}
-					else if (objectType % 3 == 1)
+					else if (objectType % 4 == 1)
 					{
 						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, renderCube_2);
 					}
-					else if (objectType % 3 == 2)
+					else if (objectType % 4 == 2)
 					{
 						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, renderCube_3);
+					}
+					else if (objectType % 4 == 3)
+					{
+						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, renderMesh_1);
 					}
 					object_cnt++;
 				}
 				else
 				{
-					if (objectType % 3 == 0)
+					if (objectType % 4 == 0)
 					{
 						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, renderCube);
 					}
-					else if (objectType % 3 == 1)
+					else if (objectType % 4 == 1)
 					{
 						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, renderCube_2);
 					}
-					else if (objectType % 3 == 2)
+					else if (objectType % 4 == 2)
 					{
 						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, renderCube_3);
+					}
+					else if (objectType % 4 == 3)
+					{
+						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, renderMesh_1);
 					}
 					objects[object_cnt]->rightSibling = tree->rightSibling;
 					tree->rightSibling = objects[object_cnt++];
@@ -614,4 +633,5 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 			objectType = 0;
 	}
 }
+
 
