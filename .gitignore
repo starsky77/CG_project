@@ -9,10 +9,12 @@ packages/*
 Src/*
 !Src/*.cpp
 !Src/*.h
-mods/*
+mod/*
 skybox/*
 nanosuit/*
 *.vcxproj
 *.vcxproj.filters
 *.sln
 gallery/*
+Release/*
+
