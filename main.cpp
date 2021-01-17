@@ -1,4 +1,7 @@
 #include "utils.h"
+#define STB_IMAGE_IMPLEMENTATION
+
+#include <stb_image.h>
 
 //windows
 GLFWwindow* window;
@@ -354,61 +357,73 @@ int main()
 			model = glm::mat4(glm::mat3(camera.Right, camera.Up, -camera.Front));
 			model = glm::translate(model, camera.Position * glm::mat3(model) + glm::vec3(0.0, 0.0, -3.0));
 			genericShader.setMat4("model", model);
-			if (objectType % 4 == 0)
+			if (objectType % 5 == 0)
 			{
 				renderCube();
 			}
-			else if (objectType % 4 == 1)
+			else if (objectType % 5 == 1)
 			{
 				renderCube_2();
 			}
-			else if (objectType % 4 == 2)
+			else if (objectType % 5 == 2)
 			{
 				renderCube_3();
 			}
-			else if (objectType % 4 == 3)
+			else if (objectType % 5 == 3)
 			{
 				renderMesh_1();
+			}
+			else if (objectType % 5 == 4)
+			{
+				drawLtree();
 			}
 			if (draw_request)
 			{
 				if (!tree)
 				{
-					if (objectType % 4 == 0)
+					if (objectType % 5 == 0)
 					{
 						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, renderCube);
 					}
-					else if (objectType % 4 == 1)
+					else if (objectType % 5 == 1)
 					{
 						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, renderCube_2);
 					}
-					else if (objectType % 4 == 2)
+					else if (objectType % 5 == 2)
 					{
 						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, renderCube_3);
 					}
-					else if (objectType % 4 == 3)
+					else if (objectType % 5 == 3)
 					{
 						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, renderMesh_1);
+					}
+					else if (objectType % 5 == 4)
+					{
+						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, drawLtree);
 					}
 					object_cnt++;
 				}
 				else
 				{
-					if (objectType % 4 == 0)
+					if (objectType % 5 == 0)
 					{
 						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, renderCube);
 					}
-					else if (objectType % 4 == 1)
+					else if (objectType % 5 == 1)
 					{
 						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, renderCube_2);
 					}
-					else if (objectType % 4 == 2)
+					else if (objectType % 5 == 2)
 					{
 						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, renderCube_3);
 					}
-					else if (objectType % 4 == 3)
+					else if (objectType % 5 == 3)
 					{
 						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, renderMesh_1);
+					}
+					else if (objectType % 5 == 4)
+					{
+						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, drawLtree);
 					}
 					objects[object_cnt]->rightSibling = tree->rightSibling;
 					tree->rightSibling = objects[object_cnt++];
