@@ -139,11 +139,32 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Grammar.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="light.cpp" />
+    <ClCompile Include="nurbs\BSplineCurve.cpp" />
+    <ClCompile Include="nurbs\BSplineSurface.cpp" />
+    <ClCompile Include="nurbs\draw_objects.cpp" />
+    <ClCompile Include="nurbs\Matrix33.cpp" />
+    <ClCompile Include="nurbs\sweptSurface.cpp" />
+    <ClCompile Include="nurbs\testcases.cpp" />
+    <ClCompile Include="nurbs\trackball.cpp" />
+    <ClCompile Include="nurbs\vector3D.cpp" />
+    <ClCompile Include="Parse.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="Grammar.h" />
+    <ClInclude Include="nurbs\BSplineCurve.h" />
+    <ClInclude Include="nurbs\BSplineSurface.h" />
+    <ClInclude Include="nurbs\draw_objects.h" />
+    <ClInclude Include="nurbs\Matrix33.h" />
+    <ClInclude Include="nurbs\Point.h" />
+    <ClInclude Include="nurbs\sweptSurface.h" />
+    <ClInclude Include="nurbs\testcases.h" />
+    <ClInclude Include="nurbs\trackball.h" />
+    <ClInclude Include="nurbs\vector3D.h" />
+    <ClInclude Include="Parse.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="light.h" />
     <ClInclude Include="mesh.h" />

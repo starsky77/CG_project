@@ -1,4 +1,8 @@
 #include "utils.h"
+#include "nurbs/draw_objects.h"
+#define STB_IMAGE_IMPLEMENTATION
+
+#include <stb_image.h>
 
 //windows
 GLFWwindow* window;
@@ -6,7 +10,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // settings
-static const char *varyings[] = {
+static const char* varyings[] = {
 	"selected_alias"
 	// "alias"
 	// "TexCoords","selected_alias","a","b","c"
@@ -27,9 +31,9 @@ glm::vec3 LightPositions[] = {
 	glm::vec3(1.2f, 1.0f, 2.0f),
 	glm::vec3(1.2f, 2.0f, 0.0f),
 	glm::vec3(-1.2f, 2.0f, 2.0f),
-	glm::vec3(-1.2f, 2.0f, 0.0f)};
+	glm::vec3(-1.2f, 2.0f, 0.0f) };
 
-glm::vec3 &lightPos(LightPositions[0]);
+glm::vec3& lightPos(LightPositions[0]);
 
 
 //Others
@@ -73,6 +77,8 @@ int init()
 	// tell GLFW to capture our mouse
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+	LtreeInit();
+
 	// glad: load all OpenGL function pointers
 	// ---------------------------------------
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -81,7 +87,11 @@ int init()
 		return 0;
 	}
 	glEnable(GL_DEPTH_TEST);
+
+	init_nurbs();
 	return 1;
+
+
 }
 
 
@@ -112,7 +122,7 @@ int main()
 	// unsigned int select_program=Feedback_Initialize(&feedback_vbo,&select_xfb);
 	// Shader lightingShader("shaders/cursor.vert", "shaders/cursor.frag", "shaders/cursor.geom");
 	//--------------------------------------------------------------------------------------------------
-	
+
 
 	// select buffers setup
 	//------------------------------------------------------------------------------------------------
@@ -140,23 +150,23 @@ int main()
 		1.0f, 0.5f, 1.0f, 0.0f,
 		0.5f, 1.0f, 0.0f, 1.0f,
 		1.0f, 0.5f, 1.0f, 0.0f,
-		1.0f, 1.0f, 1.0f, 1.0f};
+		1.0f, 1.0f, 1.0f, 1.0f };
 	float quad[] = {
 		-1.0f, 1.0f, 0.0f, 1.0f,
 		-1.0f, -1.0f, 0.0f, 0.0f,
 		1.0f, -1.0f, 1.0f, 0.0f,
 		-1.0f, 1.0f, 0.0f, 1.0f,
 		1.0f, -1.0f, 1.0f, 0.0f,
-		1.0f, 1.0f, 1.0f, 1.0f};
+		1.0f, 1.0f, 1.0f, 1.0f };
 	glGenVertexArrays(1, &quadVAO);
 	glGenBuffers(1, &quadVBO);
 
 	glBindVertexArray(quadVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(quad), &quad, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
 	unsigned int cornerVAO, cornerVBO;
@@ -165,9 +175,9 @@ int main()
 	glBindVertexArray(cornerVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, cornerVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(corner), &corner, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 	//------------------------------------------------------------------------------------------------
 	//--------cube texture
@@ -177,7 +187,7 @@ int main()
 		"skybox/top.jpg",
 		"skybox/bottom.jpg",
 		"skybox/front.jpg",
-		"skybox/back.jpg"};
+		"skybox/back.jpg" };
 	unsigned int cubemapTexture = loadCubemap(faces);
 
 	screenShader.use();
@@ -236,7 +246,7 @@ int main()
 		// per-frame time logic
 		glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 		// Shader &genericShader=feedback?cursorShader:lightingShader;
-		Shader &genericShader=cursor_hidden?lightingShader:cursorShader;
+		Shader& genericShader = cursor_hidden ? lightingShader : cursorShader;
 		// if(!shader_selection)glEnable(GL_RASTERIZER_DISCARD);
 
 		double currentFrame = glfwGetTime();
@@ -284,8 +294,9 @@ int main()
 			depthShader.setVec3("viewPos", lightPos);
 			// bind diffuse map
 			renderPlane();
-			
-			if(tree)DrawObjCollection(tree,depthShader);
+			//drawNURBSSurface();
+
+			if (tree)DrawObjCollection(tree, depthShader);
 			if (model_draw)
 			{
 				depthShader.setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.1f, 0.0f)));
@@ -337,78 +348,95 @@ int main()
 		// FIXME: should do the select pass in reverse order
 		genericShader.setInt("alias", 0);
 		renderPlane();
+		drawNURBSSurface();
+		//drawLtree();
+
 		// bind diffuse map
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, diffuseMap);
-		
 
-		
+
+
+
+
 		simpleShader.setMat4("projection", projection);
 		simpleShader.setMat4("view", view);
 		if (tree)
 		{
-			DrawObjCollection(tree, genericShader,current_object,&simpleShader);
+			DrawObjCollection(tree, genericShader, current_object, &simpleShader);
 		}
 		if (!cursor_hidden && objectType)
 		{
 			model = glm::mat4(glm::mat3(camera.Right, camera.Up, -camera.Front));
 			model = glm::translate(model, camera.Position * glm::mat3(model) + glm::vec3(0.0, 0.0, -3.0));
 			genericShader.setMat4("model", model);
-			if (objectType % 4 == 0)
+			if (objectType % 5 == 0)
 			{
 				renderCube();
 			}
-			else if (objectType % 4 == 1)
+			else if (objectType % 5 == 1)
 			{
 				renderCube_2();
 			}
-			else if (objectType % 4 == 2)
+			else if (objectType % 5 == 2)
 			{
 				renderCube_3();
 			}
-			else if (objectType % 4 == 3)
+			else if (objectType % 5 == 3)
 			{
 				renderMesh_1();
+			}
+			else if (objectType % 5 == 4)
+			{
+				drawLtree();
 			}
 			if (draw_request)
 			{
 				if (!tree)
 				{
-					if (objectType % 4 == 0)
+					if (objectType % 5 == 0)
 					{
 						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, renderCube);
 					}
-					else if (objectType % 4 == 1)
+					else if (objectType % 5 == 1)
 					{
 						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, renderCube_2);
 					}
-					else if (objectType % 4 == 2)
+					else if (objectType % 5 == 2)
 					{
 						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, renderCube_3);
 					}
-					else if (objectType % 4 == 3)
+					else if (objectType % 5 == 3)
 					{
 						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, renderMesh_1);
+					}
+					else if (objectType % 5 == 4)
+					{
+						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, drawLtree);
 					}
 					object_cnt++;
 				}
 				else
 				{
-					if (objectType % 4 == 0)
+					if (objectType % 5 == 0)
 					{
 						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, renderCube);
 					}
-					else if (objectType % 4 == 1)
+					else if (objectType % 5 == 1)
 					{
 						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, renderCube_2);
 					}
-					else if (objectType % 4 == 2)
+					else if (objectType % 5 == 2)
 					{
 						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, renderCube_3);
 					}
-					else if (objectType % 4 == 3)
+					else if (objectType % 5 == 3)
 					{
 						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, renderMesh_1);
+					}
+					else if (objectType % 5 == 4)
+					{
+						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, drawLtree);
 					}
 					objects[object_cnt]->rightSibling = tree->rightSibling;
 					tree->rightSibling = objects[object_cnt++];
@@ -429,7 +457,7 @@ int main()
 			// glDisable(GL_RASTERIZER_DISCARD);
 			glGetNamedBufferSubData(buf, 0, sizeof(int), &current_object);
 			std::cout << current_object << std::endl;
-			static int none[1]={-1};
+			static int none[1] = { -1 };
 			//     bool b=glUnmapNamedBuffer(feedback_vbo);
 			// glPauseTransformFeedback();
 			// glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER, 5 * sizeof(int), NULL, GL_DYNAMIC_READ);
@@ -513,7 +541,7 @@ int main()
 
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-void processInput(GLFWwindow *window)
+void processInput(GLFWwindow* window)
 {
 	if (Motion)
 	{
@@ -569,7 +597,7 @@ void processInput(GLFWwindow *window)
 }
 
 
-void click_callback(GLFWwindow *window, int button, int action, int mods)
+void click_callback(GLFWwindow* window, int button, int action, int mods)
 {
 	if (cursor_hidden)
 		return;
@@ -582,7 +610,7 @@ void click_callback(GLFWwindow *window, int button, int action, int mods)
 }
 
 // glfw: whenever the mouse moves, this callback is called
-void mouse_callback(GLFWwindow *window, double xpos, double ypos)
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
 	if (firstMouse)
 	{
@@ -594,10 +622,10 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 	double xoffset = xpos - lastX;
 	double yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
 
-	if (current_object > 0 && feedback &&current_object < object_cnt)
+	if (current_object > 0 && feedback && current_object < object_cnt)
 	{
 		// // ObjectMove(objects,current_object,xoffset,yoffset);
-		glm::mat4 &model = objects[current_object]->model;
+		glm::mat4& model = objects[current_object]->model;
 		try
 		{
 			double distance = glm::length(camera.Position - glm::vec3(model[4]));
@@ -621,7 +649,7 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos)
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	if (cursor_hidden)
 		camera.ProcessMouseScroll(yoffset);

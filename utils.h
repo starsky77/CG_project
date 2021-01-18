@@ -1,7 +1,5 @@
 #pragma once
-#define STB_IMAGE_IMPLEMENTATION
 
-//#include "stb_image.h"
 #include <iostream>
 
 #include <glad/glad.h>
@@ -17,12 +15,13 @@
 #include "model.h"
 #include "light.h"
 #include "Object.h"
-
+#include "Parse.h"
+#include "Grammar.h"
 
 extern int objectType = 0;
 extern unsigned int depthMapFBO, depthMap;
 extern const int SHADOW_WIDTH = 800, SHADOW_HEIGHT = 600;
-
+extern vector<float*> vec;
 
 extern bool postrender = false, edge = true, skybox = false, model_draw = false,
 display_corner = true, Motion = false, feedback = false, cursor_hidden = true,
@@ -33,6 +32,7 @@ extern Model* mesh_Bunny = NULL;
 extern Shader* meshShader = NULL;
 
 //vertices
+float* treev;
 float planeVertices[] = {
 	// positions            // normals         // texcoords
 	50.0f, -0.5f, 50.0f, 0.0f, 1.0f, 0.0f, 50.0f, 0.0f,
@@ -91,7 +91,7 @@ float vertices[] = {
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void processInput(GLFWwindow *window);
+void processInput(GLFWwindow* window);
 void gen_preview_framebuffer();
 void renderPlane();
 void renderCube();
@@ -99,47 +99,47 @@ void renderCube_2();
 void renderCube_3();
 void renderMesh_1();
 void renderCube(int light);
-void click_callback(GLFWwindow* window,int button,int action,int mods);
+void click_callback(GLFWwindow* window, int button, int action, int mods);
 unsigned int loadCubemap(std::vector<std::string> faces);
 unsigned int loadTexture(char const* path);
-unsigned int Feedback_Initialize(unsigned int *_vbo=NULL,unsigned int *_xfb=NULL);
+unsigned int Feedback_Initialize(unsigned int* _vbo = NULL, unsigned int* _xfb = NULL);
 
 
-unsigned int loadTexture(char const * path)
+unsigned int loadTexture(char const* path)
 {
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
 
-    int width, height, nrComponents;
-    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
-    if (data)
-    {
-        GLenum format;
-        if (nrComponents == 1)
-            format = GL_RED;
-        else if (nrComponents == 3)
-            format = GL_RGB;
-        else if (nrComponents == 4)
-            format = GL_RGBA;
+	int width, height, nrComponents;
+	unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
+	if (data)
+	{
+		GLenum format;
+		if (nrComponents == 1)
+			format = GL_RED;
+		else if (nrComponents == 3)
+			format = GL_RGB;
+		else if (nrComponents == 4)
+			format = GL_RGBA;
 
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        stbi_image_free(data);
-    }
-    else
-    {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
-    }
+		stbi_image_free(data);
+	}
+	else
+	{
+		std::cout << "Texture failed to load at path: " << path << std::endl;
+		stbi_image_free(data);
+	}
 
-    return textureID;
+	return textureID;
 }
 
 unsigned int loadCubemap(std::vector<std::string> faces)
@@ -178,9 +178,9 @@ unsigned int loadCubemap(std::vector<std::string> faces)
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width and
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
+	// make sure the viewport matches the new window dimensions; note that width and
+	// height will be significantly larger than specified on retina displays.
+	glViewport(0, 0, width, height);
 }
 
 
@@ -306,6 +306,51 @@ void gen_preview_framebuffer()
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
 	// glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
+}
+
+void LtreeInit()
+{
+	Parse tree;
+	tree.ParseDefault();
+	tree.DrawLSystem();
+
+	int onesize = 288;							// 288=8*6*6
+	int totalsize = vec.size() * onesize;
+
+	treev = new float[totalsize];
+
+	for (int i = 0; i < totalsize; i++) {
+		treev[i] = vec[i / (onesize)][i % (onesize)];
+	}
+}
+
+void drawLtree()
+{
+	unsigned int VBO, VAO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+
+	glBindVertexArray(VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * 6 * 6 * vec.size(), treev, GL_STATIC_DRAW);
+
+	// position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	// color attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	// texture coord attribute
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	unsigned int diffuseMap = loadTexture("container2.png");
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, diffuseMap);
+
+	glDrawArrays(GL_TRIANGLES, 0, 36 * vec.size());
+
 }
 
 
