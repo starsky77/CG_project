@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "nurbs/draw_objects.h"
 
 //windows
 GLFWwindow* window;
@@ -81,6 +82,10 @@ int init()
 		return 0;
 	}
 	glEnable(GL_DEPTH_TEST);
+
+	// 2021-1-18 -sxj
+	init_nurbs();
+
 	return 1;
 }
 
@@ -284,6 +289,10 @@ int main()
 			depthShader.setVec3("viewPos", lightPos);
 			// bind diffuse map
 			renderPlane();
+			// TODO:
+			drawNURBSSurface();
+
+
 			
 			if(tree)DrawObjCollection(tree,depthShader);
 			if (model_draw)
@@ -337,6 +346,11 @@ int main()
 		// FIXME: should do the select pass in reverse order
 		genericShader.setInt("alias", 0);
 		renderPlane();
+		// TODO:
+		drawNURBSSurface();
+
+
+
 		// bind diffuse map
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, diffuseMap);

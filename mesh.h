@@ -1,7 +1,15 @@
 #ifndef MESH_H
 #define MESH_H
 
+#define sxj
+#ifndef sxj
 #include <glad/glad.h> // holds all OpenGL type declarations
+#endif
+
+#ifdef sxj
+#include "opengl/glad/glad.h"
+#endif
+
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

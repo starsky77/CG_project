@@ -1,7 +1,14 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#define sxj
+#ifndef sxj
 #include <glad/glad.h>
+#endif
+
+#ifdef sxj
+#include "opengl/glad/glad.h"
+#endif
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 

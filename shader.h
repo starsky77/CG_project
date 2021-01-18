@@ -5,7 +5,14 @@ Modifications: the geometry shader will now definetly have
 a transform feedback object attached; 
 / ------------------------------------------------------------------------*/
 
+#define sxj
+#ifndef sxj
 #include <glad/glad.h>
+#endif
+
+#ifdef sxj
+#include "opengl/glad/glad.h"
+#endif
 #include <glm/glm.hpp>
 
 #include <string>
