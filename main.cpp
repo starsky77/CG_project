@@ -76,6 +76,8 @@ int init()
 	// tell GLFW to capture our mouse
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+	LtreeInit();
+
 	// glad: load all OpenGL function pointers
 	// ---------------------------------------
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -85,6 +87,8 @@ int init()
 	}
 	glEnable(GL_DEPTH_TEST);
 	return 1;
+
+
 }
 
 
@@ -340,10 +344,15 @@ int main()
 		// FIXME: should do the select pass in reverse order
 		genericShader.setInt("alias", 0);
 		renderPlane();
+
+		//drawLtree();
+
 		// bind diffuse map
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, diffuseMap);
 		
+		
+
 
 		
 		simpleShader.setMat4("projection", projection);

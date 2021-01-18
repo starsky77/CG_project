@@ -2,6 +2,8 @@
 
 using namespace std;
 
+vector<float*> vec;					// store all of the vertices
+
 void Parse::DrawLSystem()
 {
 	this->Parseinit();
@@ -113,7 +115,11 @@ void Parse::drawLine()
 		nowx + nextx,			nowy + nexty,		nowz + nextz,			0.0f,  1.0f,  0.0f,  0.0f,  1.0f
 	};
 
-	vec.push_back(v);
+	float *vertices = new float[288];			// 288=8*6*6
+	for (int i = 0; i < 288; i++) {
+		vertices[i] = v[i];
+	}
+	vec.push_back(vertices);
 
 	// reset mystack
 	mystack.top().linewidth -= 0.1;

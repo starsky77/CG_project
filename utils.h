@@ -21,7 +21,7 @@
 extern int objectType = 0;
 extern unsigned int depthMapFBO, depthMap;
 extern const int SHADOW_WIDTH = 800, SHADOW_HEIGHT = 600;
-
+extern vector<float*> vec;
 
 extern bool postrender = false, edge = true, skybox = false, model_draw = false,
 display_corner = true, Motion = false, feedback = false, cursor_hidden = true,
@@ -32,6 +32,7 @@ extern Model* mesh_Bunny = NULL;
 extern Shader* meshShader = NULL;
 
 //vertices
+float* treev;
 float planeVertices[] = {
 	// positions            // normals         // texcoords
 	50.0f, -0.5f, 50.0f, 0.0f, 1.0f, 0.0f, 50.0f, 0.0f,
@@ -307,46 +308,24 @@ void gen_preview_framebuffer()
 	glReadBuffer(GL_NONE);
 }
 
-void drawLtree()
+void LtreeInit()
 {
 	Parse tree;
 	tree.ParseDefault();
 	tree.DrawLSystem();
 
-	int onesize = 8 * 6 * 6;
-	int totalsize = tree.vec.size * onesize;
+	int onesize = 288;							// 288=8*6*6
+	int totalsize = vec.size() * onesize;		
 
-	float* treev = new float[totalsize];
+	treev = new float[totalsize];
 
 	for (int i = 0; i < totalsize; i++) {
-		treev[i] = tree.vec[i / (onesize)][i % (onesize)];
+		treev[i] = vec[i / (onesize)][i % (onesize)];
 	}
+}
 
-	// init texture 
-	unsigned int texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
-	// set the texture wrapping parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	// set texture filtering parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	// load image, create texture and generate mipmaps
-	int width, height, nrChannels;
-	// The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
-	unsigned char *data = stbi_load("container2.png", &width, &height, &nrChannels, 0);
-	if (data)
-	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "Failed to load texture----in L-system" << std::endl;
-	}
-	stbi_image_free(data);
-
+void drawLtree()
+{
 	unsigned int VBO, VAO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -354,7 +333,7 @@ void drawLtree()
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(treev), treev, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*8*6*6*vec.size(), treev, GL_STATIC_DRAW);
 
 	// position attribute
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -365,10 +344,12 @@ void drawLtree()
 	// texture coord attribute
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
-
 	
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glDrawArrays(GL_TRIANGLES, 0, 36);
+	unsigned int diffuseMap = loadTexture("container2.png");
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, diffuseMap);
+
+	glDrawArrays(GL_TRIANGLES, 0, 36*vec.size());
 
 }
 

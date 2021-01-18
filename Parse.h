@@ -28,9 +28,7 @@ private:
 	float width;						// tree trunk width
 	float rotateX;						// rotate x degree
 	float rotateY;						// rotate y degree
-	float rotateZ;						// rotate z degree
-public:
-	vector<float*> vec;					// store all of the vertices
+	float rotateZ;						// rotate z degree	
 
 public:
 	Parse(){}
