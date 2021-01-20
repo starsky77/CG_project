@@ -28,8 +28,8 @@ display_corner = true, Motion = false, feedback = false, cursor_hidden = true,
 draw_request = false;
 
 //mesh
-extern Model* mesh_Bunny = NULL;
-extern Shader* meshShader = NULL;
+Model* mesh_Bunny = NULL;
+Shader* meshShader = NULL;
 
 //vertices
 float* treev;
@@ -244,7 +244,7 @@ void renderCube_3()
 
 void renderMesh_1()
 {
-	unsigned int diffuseMap = loadTexture("container2.png");
+	static unsigned int diffuseMap = loadTexture("container2.png");
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, diffuseMap);
 	mesh_Bunny->Draw(*meshShader);
@@ -326,7 +326,7 @@ void LtreeInit()
 
 void drawLtree()
 {
-	unsigned int VBO, VAO;
+	static unsigned int VBO, VAO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 
@@ -345,7 +345,7 @@ void drawLtree()
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
-	unsigned int diffuseMap = loadTexture("container2.png");
+	static unsigned int diffuseMap = loadTexture("container2.png");
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, diffuseMap);
 

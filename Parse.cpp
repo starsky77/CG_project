@@ -69,7 +69,7 @@ void Parse::drawLine()
 
 	float line = mystack.top().linewidth;
 
-	float v[] = {
+	static float v[] = {
 		// positions														// normals           // texture coords
 		// back 
 		nowx,					nowy,				nowz,					0.0f,  0.0f, -1.0f,  0.0f,  0.0f,

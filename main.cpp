@@ -2,7 +2,7 @@
 #include "nurbs/draw_objects.h"
 #define STB_IMAGE_IMPLEMENTATION
 
-#include <stb_image.h>
+#include "stb_image.h"
 
 //windows
 GLFWwindow* window;
@@ -222,11 +222,11 @@ int main()
 	// load models texture and light
 	//Model temple("mod/nanosuit/nanosuit.obj");
 	//Model temple("mod/bmw/bmw.obj");
-	Model temple("mod/bunny/bunny.obj");
+	Model temple("mods/20V.obj");
 	//Model temple("nanosuit/nanosuit.obj");
 	//Model temple("gallery/gallery.obj");
 	Light lights(LightPositions, 4);
-	mesh_Bunny = new Model("mod/bunny/bunny.obj");
+	mesh_Bunny = new Model("mods/20V.obj");
 	unsigned int diffuseMap = loadTexture("container2.png");
 	unsigned int specularMap = loadTexture("container2_specular.png");
 
