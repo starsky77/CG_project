@@ -42,7 +42,7 @@ extern const int SHADOW_WIDTH, SHADOW_HEIGHT;
 static const int MAX_OBJECTS = 50;
 ObjTree* tree = NULL, * objects[MAX_OBJECTS];
 int current_object, object_cnt = 1;
-
+int objTypeTotal = 6;
 
 
 
@@ -348,7 +348,7 @@ int main()
 		// FIXME: should do the select pass in reverse order
 		genericShader.setInt("alias", 0);
 		renderPlane();
-		drawNURBSSurface();
+		//drawNURBSSurface();
 		//drawLtree();
 
 		// bind diffuse map
@@ -370,73 +370,85 @@ int main()
 			model = glm::mat4(glm::mat3(camera.Right, camera.Up, -camera.Front));
 			model = glm::translate(model, camera.Position * glm::mat3(model) + glm::vec3(0.0, 0.0, -3.0));
 			genericShader.setMat4("model", model);
-			if (objectType % 5 == 0)
+			if (objectType % objTypeTotal == 0)
 			{
 				renderCube();
 			}
-			else if (objectType % 5 == 1)
+			else if (objectType % objTypeTotal == 1)
 			{
 				renderCube_2();
 			}
-			else if (objectType % 5 == 2)
+			else if (objectType % objTypeTotal == 2)
 			{
 				renderCube_3();
 			}
-			else if (objectType % 5 == 3)
+			else if (objectType % objTypeTotal == 3)
 			{
 				renderMesh_1();
 			}
-			else if (objectType % 5 == 4)
+			else if (objectType % objTypeTotal == 4)
 			{
 				drawLtree();
+			}
+			else if (objectType % objTypeTotal == 5)
+			{
+				drawNURBSSurface();
 			}
 			if (draw_request)
 			{
 				if (!tree)
 				{
-					if (objectType % 5 == 0)
+					if (objectType % objTypeTotal == 0)
 					{
 						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, renderCube);
 					}
-					else if (objectType % 5 == 1)
+					else if (objectType % objTypeTotal == 1)
 					{
 						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, renderCube_2);
 					}
-					else if (objectType % 5 == 2)
+					else if (objectType % objTypeTotal == 2)
 					{
 						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, renderCube_3);
 					}
-					else if (objectType % 5 == 3)
+					else if (objectType % objTypeTotal == 3)
 					{
 						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, renderMesh_1);
 					}
-					else if (objectType % 5 == 4)
+					else if (objectType % objTypeTotal == 4)
 					{
 						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, drawLtree);
+					}
+					else if (objectType % objTypeTotal == 5)
+					{
+						objects[object_cnt] = tree = CreatLeafnode(object_cnt, 's', model, drawNURBSSurface);
 					}
 					object_cnt++;
 				}
 				else
 				{
-					if (objectType % 5 == 0)
+					if (objectType % objTypeTotal == 0)
 					{
 						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, renderCube);
 					}
-					else if (objectType % 5 == 1)
+					else if (objectType % objTypeTotal == 1)
 					{
 						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, renderCube_2);
 					}
-					else if (objectType % 5 == 2)
+					else if (objectType % objTypeTotal == 2)
 					{
 						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, renderCube_3);
 					}
-					else if (objectType % 5 == 3)
+					else if (objectType % objTypeTotal == 3)
 					{
 						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, renderMesh_1);
 					}
-					else if (objectType % 5 == 4)
+					else if (objectType % objTypeTotal == 4)
 					{
 						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, drawLtree);
+					}
+					else if (objectType % objTypeTotal == 5)
+					{
+						objects[object_cnt] = CreatLeafnode(object_cnt, 's', model, drawNURBSSurface);
 					}
 					objects[object_cnt]->rightSibling = tree->rightSibling;
 					tree->rightSibling = objects[object_cnt++];
