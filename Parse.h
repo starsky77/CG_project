@@ -8,7 +8,6 @@
 #include <stack>
 #include <vector>
 
-#include <stb_image.h>
 
 struct Tmp {							// we use a class Tmp to store information in recursion
 public:
