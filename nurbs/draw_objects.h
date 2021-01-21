@@ -19,8 +19,9 @@
 using namespace std;
 
 extern int shaderprogram;
+#ifndef NO_EXTERN_DRAW_OBJECTS_H
 extern GLuint surfArray;
-
+#endif
 void genNURBSSurface(int p, vector<double> U, int q, vector<double> V, vector<vector<Point4D>> P);
 
 void drawNURBSSurface();
