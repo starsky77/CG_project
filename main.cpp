@@ -43,7 +43,7 @@ static const int MAX_OBJECTS = 50;
 ObjTree* tree = NULL, * objects[MAX_OBJECTS];
 int current_object, object_cnt = 1;
 int objTypeTotal = 6;
-
+Model *mods = NULL;
 
 
 int init()
@@ -88,6 +88,9 @@ int init()
 	}
 	glEnable(GL_DEPTH_TEST);
 
+	/*mods=new Model("mods/gallery/gallery.obj");
+	delete mods;*/
+	mods=new Model("mods/gallery/gallery.obj");
 	init_nurbs();
 	return 1;
 
@@ -220,13 +223,14 @@ int main()
 
 	//----------------------------------------------------------------------------------------------------
 	// load models texture and light
-	//Model temple("mod/nanosuit/nanosuit.obj");
-	//Model temple("mod/bmw/bmw.obj");
-	Model temple("mods/20V.obj");
 	//Model temple("nanosuit/nanosuit.obj");
-	//Model temple("gallery/gallery.obj");
+	//Model temple("mod/bmw/bmw.obj");
+	//Model temple("mods/20V.obj");
+	//Model temple("nanosuit/nanosuit.obj");
+	Model &temple = *mods;
+	//Model temple("mods/gallery/gallery.obj");
 	Light lights(LightPositions, 4);
-	mesh_Bunny = new Model("mods/20V.obj");
+	mesh_Bunny = new Model("mods/bunny/bunny.obj");
 	unsigned int diffuseMap = loadTexture("container2.png");
 	unsigned int specularMap = loadTexture("container2_specular.png");
 

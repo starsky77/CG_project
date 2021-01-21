@@ -3,7 +3,7 @@
 using namespace std;
 
 vector<float*> vec;					// store all of the vertices
-
+int cnt_debug = 0;
 void Parse::DrawLSystem()
 {
 	this->Parseinit();
@@ -69,7 +69,7 @@ void Parse::drawLine()
 
 	float line = mystack.top().linewidth;
 
-	static float v[] = {
+	float v[] = {
 		// positions														// normals           // texture coords
 		// back 
 		nowx,					nowy,				nowz,					0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
@@ -116,6 +116,10 @@ void Parse::drawLine()
 	};
 
 	float *vertices = new float[288];			// 288=8*6*6
+	cnt_debug++;
+	if (cnt_debug % 10 == 0) {
+		cnt_debug = cnt_debug;
+	}
 	for (int i = 0; i < 288; i++) {
 		vertices[i] = v[i];
 	}

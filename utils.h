@@ -326,7 +326,9 @@ void LtreeInit()
 
 void drawLtree()
 {
-	static unsigned int VBO, VAO;
+	static unsigned int VBO=0, VAO=0,cnt=0;
+	static unsigned int diffuseMap;
+	if (VBO ==0) {
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 
@@ -334,7 +336,6 @@ void drawLtree()
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * 6 * 6 * vec.size(), treev, GL_STATIC_DRAW);
-
 	// position attribute
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -345,11 +346,15 @@ void drawLtree()
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
-	static unsigned int diffuseMap = loadTexture("container2.png");
+
+	diffuseMap = loadTexture("container2.png");
+	cnt++;
+	}
+	glBindVertexArray(VAO);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, diffuseMap);
 
-	glDrawArrays(GL_TRIANGLES, 0, 36 * vec.size());
+	glDrawArrays(GL_TRIANGLES, 0, 36*vec.size());
 
 }
 

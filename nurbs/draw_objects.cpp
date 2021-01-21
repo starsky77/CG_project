@@ -1,3 +1,4 @@
+#define NO_EXTERN_DRAW_OBJECTS_H
 #include "draw_objects.h"
 GLuint surfArray;
 int shaderprogram;
@@ -61,9 +62,9 @@ void drawNURBSSurface()
 	glDrawElements(GL_TRIANGLES, (numberOfPtsV - 1) * (numberOfPtsU - 1) * 2 * 3, GL_UNSIGNED_INT, 0);
 	//glClearColor(1, 0, 1, 1);
 	//glPointSize(4);
-	//glDrawArrays(GL_POINTS, 0, numberOfPtsV * numberOfPtsU);
+	//glDrawArrays(GL_TRIANGLES, 0, numberOfPtsV* numberOfPtsU*3);
 
-	glBindVertexArray(0);
+	//glBindVertexArray(0);
 
 }
 
@@ -139,7 +140,7 @@ void genNURBSBuffer(vector<vector<Point3D>> surf)
 
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	glBindVertexArray(0);
+	//glBindVertexArray(0);
 }
 
 void init_nurbs()
