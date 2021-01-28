@@ -9,7 +9,7 @@ packages/*
 Src/*
 !Src/*.cpp
 !Src/*.h
-mod/*
+mods/*
 skybox/*
 nanosuit/*
 *.vcxproj
